@@ -64,11 +64,18 @@ export async function findHistoryConflict(candidate: CandidateTx): Promise<{ txI
 
 /**
  * Revokes a certificate by serial number (the RevokedCertificate table, which is also the CRL
- * source for GET /api/v1/sync/updates) and, best-effort, mirrors the revocation onto the Device
- * row's revokedAt/revokedReason — what POST /api/v1/auth/verify actually checks — so a revoked
- * device can't obtain a new session either. Upserts, so revoking an already-revoked serial is a
- * no-op rather than an error. Shared by double-spend revocation here and intended for reuse by
- * POST /api/v1/admin/revoke once that's implemented.
+ * source for GET /api/v1/sync/updates) and mirrors the revocation onto the Device row's
+ * revokedAt/revokedReason — what POST /api/v1/auth/verify actually checks — so a revoked device
+ * can't obtain a new session either. Upserts, so revoking an already-revoked serial is never an
+ * error — but it's NOT a no-op on repeat calls: `reason` is last-write-wins on both rows (e.g.
+ * double-spend auto-revokes a device, then an admin revokes the same device via
+ * POST /api/v1/admin/revoke with a different reason, or vice versa — whichever call happened
+ * last should be reflected consistently everywhere, not have RevokedCertificate.reason and
+ * Device.revokedReason silently diverge). `revokedAt` on RevokedCertificate is deliberately NOT
+ * bumped on repeat calls, unlike Device.revokedAt: it means "when this cert first became
+ * untrusted," which shouldn't move just because it was revoked again for a different reason —
+ * Device.revokedAt's own bump-every-time behavior is about a different question ("was this
+ * device revoked, and how recently") and is unaffected by this fix.
  */
 export async function revokeCertificate(params: {
   certSerial: string;
@@ -78,7 +85,7 @@ export async function revokeCertificate(params: {
   await prisma.revokedCertificate.upsert({
     where: { certSerial: params.certSerial },
     create: { certSerial: params.certSerial, reason: params.reason },
-    update: {},
+    update: { reason: params.reason },
   });
 
   // updateMany (not update): the Device row may not exist for this device_id in principle, and

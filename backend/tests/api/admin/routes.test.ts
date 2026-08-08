@@ -58,12 +58,17 @@ jest.mock('../../../src/db/client', () => {
         upsert: async ({
           where,
           create,
+          update,
         }: {
           where: { certSerial: string };
           create: { certSerial: string; reason: string };
+          update: { reason?: string };
         }) => {
-          if (!revokedCerts.has(where.certSerial)) {
+          const existing = revokedCerts.get(where.certSerial);
+          if (!existing) {
             revokedCerts.set(where.certSerial, { certSerial: where.certSerial, revokedAt: new Date(), reason: create.reason });
+          } else if (update.reason !== undefined) {
+            existing.reason = update.reason;
           }
           return revokedCerts.get(where.certSerial);
         },
@@ -281,6 +286,32 @@ describe('POST /api/v1/admin/revoke', () => {
 
     const deviceRow = await prisma.device.findUnique({ where: { deviceId: device.deviceId } });
     expect(deviceRow?.revokedAt).not.toBeNull();
+  });
+
+  it('revoking a device twice with different reasons leaves both records holding the latest reason', async () => {
+    const device = await enrollTestDevice(app);
+
+    const first = await revokeDevice({ device_id: device.deviceId, reason: 'double-spend auto-revoke' });
+    expect(first.statusCode).toBe(200);
+
+    const second = await revokeDevice({ device_id: device.deviceId, reason: 'admin: confirmed stolen phone' });
+    expect(second.statusCode).toBe(200);
+    expect(second.json().reason).toBe('admin: confirmed stolen phone');
+
+    const { prisma } = jest.requireMock('../../../src/db/client') as {
+      prisma: {
+        revokedCertificate: {
+          findUnique: (args: { where: { certSerial: string } }) => Promise<{ reason: string } | null>;
+        };
+        device: { findUnique: (args: { where: { deviceId: string } }) => Promise<{ revokedReason: string | null }> };
+      };
+    };
+    const revokedCert = await prisma.revokedCertificate.findUnique({ where: { certSerial: device.serialNumber } });
+    const deviceRow = await prisma.device.findUnique({ where: { deviceId: device.deviceId } });
+
+    expect(revokedCert?.reason).toBe('admin: confirmed stolen phone');
+    expect(deviceRow?.revokedReason).toBe('admin: confirmed stolen phone');
+    expect(revokedCert?.reason).toBe(deviceRow?.revokedReason);
   });
 
   it('returns 404 for an unknown device_id', async () => {

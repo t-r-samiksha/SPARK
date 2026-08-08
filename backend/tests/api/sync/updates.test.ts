@@ -66,12 +66,17 @@ jest.mock('../../../src/db/client', () => {
         upsert: async ({
           where,
           create,
+          update,
         }: {
           where: { certSerial: string };
           create: { certSerial: string; reason: string };
+          update: { reason?: string };
         }) => {
-          if (!revokedCerts.has(where.certSerial)) {
+          const existing = revokedCerts.get(where.certSerial);
+          if (!existing) {
             revokedCerts.set(where.certSerial, { certSerial: where.certSerial, revokedAt: new Date(), reason: create.reason });
+          } else if (update.reason !== undefined) {
+            existing.reason = update.reason;
           }
           return revokedCerts.get(where.certSerial);
         },
