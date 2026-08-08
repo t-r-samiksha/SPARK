@@ -45,7 +45,7 @@ discussions) and in public spaces when an individual is representing the project
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the
-maintainers listed in [CONTRIBUTING.md](CONTRIBUTING.md). All complaints will be reviewed and
+maintainers listed in [README.md](README.md#maintainers). All complaints will be reviewed and
 investigated promptly and fairly.
 
 ## Attribution
