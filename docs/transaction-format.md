@@ -7,8 +7,8 @@ uploaded to the backend in a batch via `POST /api/v1/sync/transactions` (see
 [api-contract.md](api-contract.md)).
 
 **Consumed by:** Android (creates + signs as payer, receives + verifies as payee) and backend
-(validates + persists on sync). Dashboard only sees these indirectly through backend admin/fraud
-endpoints.
+(validates + persists on sync). Dashboard only sees these indirectly through backend
+`admin/incidents` endpoints.
 
 ## Fields (from kickoff)
 

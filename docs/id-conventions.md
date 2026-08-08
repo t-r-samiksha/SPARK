@@ -27,19 +27,27 @@ primitive types — other docs reference it rather than redefining them.
 
 Example: `4a1e6e2b-9c3e-4a2e-8f1a-6b2c9d4e7f10`
 
-## Timestamps
+## Timestamps — two formats, deliberately, permanently
 
-- **Unix epoch seconds**, UTC, as a JSON integer (not milliseconds, not a string).
-- Used for: `transaction.timestamp`, and any other plain "when did this happen" field.
-
-> **Exception — ISO 8601 is used instead in two places, per kickoff:**
-> - `certificate.not_before` / `certificate.not_after` (see [certificate-format.md](certificate-format.md))
-> - `trust_attestation.timestamp` (see [trust-attestation-format.md](trust-attestation-format.md))
+> **This split is confirmed intentional, not a gap to be "fixed" later.** It comes up often
+> enough as a question that it's stated here plainly, twice, so it's unmissable:
 >
-> These were called out explicitly in the kickoff as ISO 8601 while everything else defaults to
-> Unix epoch seconds. This is a deliberate two-format system, not an oversight — **do not
-> "normalize" one to match the other** without a docs PR. ISO 8601 strings use `YYYY-MM-DDTHH:MM:SSZ`
-> (UTC, `Z` suffix, no fractional seconds).
+> - **Everything defaults to Unix epoch seconds** (UTC, JSON integer, not milliseconds, not a
+>   string) — this includes `transaction.timestamp`, `purse_token.expiry`, and any other
+>   timestamp not listed below.
+> - **Exactly two fields use ISO 8601 instead**, by explicit decision:
+>   - `certificate.not_before` / `certificate.not_after` (see [certificate-format.md](certificate-format.md))
+>   - `trust_attestation.timestamp` (see [trust-attestation-format.md](trust-attestation-format.md))
+>
+> **Rationale:** certs and trust attestations are the two formats a human (an admin in the
+> dashboard, an auditor, a support agent) is expected to read directly and reason about validity
+> windows/generation time for; ISO 8601 is legible at a glance where epoch seconds aren't.
+> Everything else is machine-to-machine only, where epoch seconds are simpler to compare and
+> arithmetic-on without a datetime library. This is a closed decision — do not normalize one
+> format to match the other without a docs PR that changes this rule explicitly, and do not add
+> a third timestamp format anywhere in `docs/` without updating this section.
+>
+> ISO 8601 strings use `YYYY-MM-DDTHH:MM:SSZ` (UTC, `Z` suffix, no fractional seconds).
 
 ## Amounts
 
@@ -64,8 +72,10 @@ Example: `4a1e6e2b-9c3e-4a2e-8f1a-6b2c9d4e7f10`
 - See [crypto.md](crypto.md) for the algorithms and [canonical-serialization.md](canonical-serialization.md)
   for how this interacts with the PEM containers used by certificates/tokens/attestations.
 
-## Open questions for next sync
+## Resolved
 
-- `device_counter` / `counter_start` (see [transaction-format.md](transaction-format.md),
-  [purse-token-format.md](purse-token-format.md)) are integers but were not explicitly typed as
-  "amounts," so they stay plain JSON integers, not strings — confirm this reading.
+- `device_counter` / `counter_start` are plain JSON integers, not decimal strings — confirmed by
+  the purse token spend-enforcement decision (see
+  [purse-token-format.md](purse-token-format.md#spend-enforcement-decided)), which treats
+  `device_counter` purely as an incrementing count for continuity checking, not a paise amount.
+  The decimal-string rule under [Amounts](#amounts) above does not apply to it.

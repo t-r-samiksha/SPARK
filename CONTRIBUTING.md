@@ -13,10 +13,9 @@
 2. Make your change, with tests, scoped to one component (`android/`, `backend/`, `dashboard/`)
    or `docs/` where possible.
 3. Open a PR **against `dev`** (not `main`).
-4. CI must pass (build + test for the affected component(s)).
-5. At least 1 approving review is required before merging.
-6. Squash-merge into `dev`.
-7. Periodically, once `dev`'s CI is green, `dev` is merged into `main`. Nobody commits to `main`
+4. At least 1 approving review is required before merging.
+5. Squash-merge into `dev`.
+6. Periodically, once `dev`'s CI is green, `dev` is merged into `main`. Nobody commits to `main`
    directly.
 
 If your change touches a shared contract in `docs/`, call that out explicitly in the PR
@@ -56,27 +55,18 @@ docs: define canonical serialization rules for signed payloads
 
 ## Repo admin setup (one-time)
 
-CI workflows and issue templates are in place, but GitHub branch protection has to be turned on
-by an admin in repo Settings → Branches (or via `gh api`) — it can't be set from a workflow file:
-
-For both `dev` and `main`:
-- Require a pull request before merging
-- Require approvals: **1**
-- Require status checks to pass before merging → select **CI green** (and **Require 1 approving
-  review**) from `.github/workflows/ci.yml` / `pr-review-check.yml`
-- Require branches to be up to date before merging
-- Do not allow direct pushes (no bypass for admins, if possible)
-
-Additionally for `main` only:
-- Restrict who can push (ideally: nobody pushes directly; only merges from `dev`)
+For now, PRs require manual review only — at least 1 approving review before merging to `dev`.
+We'll add CI and branch protection rules in week 2 once integration begins.
 
 ## Maintainers
 
-| Name | Area | Contact |
-|---|---|---|
-| TODO | Android (wallet) | TODO |
-| TODO | Backend | TODO |
-| TODO | Dashboard | TODO |
-| TODO | Shared contracts (docs/) | TODO |
+| Member | Area | Name | Email |
+|---|---|---|---|
+| Member A | Android (wallet) | Akshayathiru | akshayat.it2024@citchennai.net |
+| Member B | Backend | Samiksha | trsamiksha.it2024@citchennai.net |
+| Member C | Dashboard / AI | Faleesha-Zaeen | faleeshazaeenzarshad.it2024@citchennai.net |
 
-> Fill in names and contact info before opening the repo up to outside contributors.
+Shared contracts (`docs/`) are jointly owned by all three — see the PR flow above for the
+sign-off requirement when a `docs/` change affects more than one workstream.
+
+> Fill in names and emails before opening the repo up to outside contributors.

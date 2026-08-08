@@ -56,19 +56,13 @@ the signature against the recomputed bytes with the signer's public key.
 ## PEM envelopes vs. field encoding
 
 Certificates, purse tokens, and trust attestations are additionally wrapped in a **PEM envelope**
-for storage/transport (see each format's doc). That envelope uses **standard base64** (RFC 7468:
-`+`/`/` alphabet, padded, wrapped at 64 characters per line) around the canonical JSON bytes
-(steps 1–5 above, run on the *entire* object including its `signature` field, since by that point
-the object is finished and the PEM layer is just a container, not something re-signed).
+for storage/transport (see each format's doc), applied to the canonical JSON bytes (steps 1–5
+above, run on the *entire* object including its `signature` field, since by that point the object
+is finished and the PEM layer is just a container, not something re-signed).
 
-This means two different base64 variants coexist in the same object at different layers:
-
-- **Inside** the JSON (keys, signatures, hashes as field values): base64url, unpadded.
-- **Around** the whole JSON (the PEM envelope itself, for cert/token/attestation): standard
-  base64, padded, line-wrapped.
-
-Don't confuse the two when implementing a parser — unwrap the PEM first (standard base64
-decode), *then* parse the resulting JSON and decode its individual base64url fields.
+Which base64 variant applies at which layer (field values vs. the PEM envelope itself) is decided
+once, in [crypto.md](crypto.md#encoding-decided) — refer there rather than this doc for the rule
+itself.
 
 ## Test vector
 

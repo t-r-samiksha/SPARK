@@ -17,7 +17,8 @@ but not necessarily the AES/X25519 stack unless it handles admin-side secrets di
 | Key agreement (ECDH) | **X25519** (Montgomery form) | 32-byte keys | For any encrypted-channel/key-wrapping use cases |
 | Symmetric encryption | **AES-256-GCM** | 32-byte key, 12-byte nonce, 16-byte tag | |
 | Hashing | **SHA-256** | — | `prev_tx_hash`, content-addressing, general integrity checks |
-| Key/signature encoding | base64url | — | All keys and signatures, everywhere, base64url encoded |
+| Field encoding (keys/sigs/hashes inside JSON) | base64url, unpadded | — | See [Encoding](#encoding-decided) below |
+| Envelope encoding (certs/tokens/attestations) | standard PEM base64 (RFC 7468), padded | — | See [Encoding](#encoding-decided) below |
 
 ## Signing — Ed25519 (PureEdDSA)
 
@@ -68,17 +69,29 @@ but not necessarily the AES/X25519 stack unless it handles admin-side secrets di
 - Output: 32 bytes, base64url-encoded when embedded in JSON (consistent with keys/signatures —
   see below).
 
-## Encoding — base64url, everywhere, unpadded
+## Encoding (decided)
 
-- **All** keys and signatures — Ed25519 public keys, X25519 public keys, Ed25519 signatures, and
-  (by extension, for consistency) SHA-256 hashes embedded in JSON — use **base64url**
-  ([RFC 4648 §5](https://www.rfc-editor.org/rfc/rfc4648#section-5): `-`/`_` instead of `+`/`/`),
-  **unpadded** (no trailing `=`).
-- This is distinct from the **standard PEM** base64 (RFC 7468: standard alphabet, padded, wrapped
-  at 64 chars) used for the *outer envelope* of certificates, purse tokens, and trust attestations
-  — see the callout in [canonical-serialization.md](canonical-serialization.md#pem-envelopes-vs-field-encoding).
-  Don't conflate the two: a field's `base64url` value should never itself be re-wrapped in PEM,
-  and a PEM envelope's body is standard base64, not base64url.
+This is the **single source of truth** for which base64 variant applies where. Every other doc
+in `docs/` that mentions encoding a key, signature, hash, or PEM container links back to this
+section rather than restating the rule — if you find a restatement elsewhere, that's a docs bug.
+
+Two variants are used, deliberately, at two different layers:
+
+1. **Inside JSON fields — base64url, unpadded.** Every public key, signature, and hash that
+   appears as a *value in a JSON object* (`device_public_key`, `signature`, `prev_tx_hash`, etc.)
+   is encoded as **base64url** ([RFC 4648 §5](https://www.rfc-editor.org/rfc/rfc4648#section-5):
+   `-`/`_` alphabet), **without padding** (no trailing `=`).
+2. **Around PEM envelopes — standard PEM base64, padded.** The *outer envelope* wrapping a full
+   certificate, purse token, or trust attestation object (see each format's doc) uses **standard
+   PEM encoding per [RFC 7468](https://www.rfc-editor.org/rfc/rfc7468)** — standard base64
+   alphabet (`+`/`/`), padded, wrapped at 64 characters per line, between `-----BEGIN ...-----`
+   and `-----END ...-----` markers.
+
+These never mix: a field's base64url value is never itself re-wrapped in PEM, and a PEM envelope's
+body is never base64url. To parse a cert/token/attestation: unwrap the PEM (standard base64
+decode) first, *then* parse the resulting JSON and decode its individual fields as base64url.
+See [canonical-serialization.md](canonical-serialization.md#pem-envelopes-vs-field-encoding) for
+where this fits in the sign/verify pipeline.
 
 ## Key management (open question)
 

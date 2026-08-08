@@ -21,7 +21,7 @@ admin endpoints).
 |---|---|---|---|
 | POST | `/api/v1/enroll` | `{account_id, public_key, attestation_blob}` | device cert |
 | POST | `/api/v1/auth/challenge` | `{}` | `{nonce}` |
-| POST | `/api/v1/auth/verify` | `{signed_nonce}` | `{session_token}` |
+| POST | `/api/v1/auth/verify` | `{device_id, signed_nonce}` | `{session_token}` |
 | POST | `/api/v1/purse/load` | device requests purse | `{purse_token}` |
 | POST | `/api/v1/purse/topup` | refill existing purse | `{purse_token}` |
 | GET | `/api/v1/purse/status` | — | `{remaining, cap, expiry}` |
@@ -35,9 +35,8 @@ admin endpoints).
 
 | Method | Path | Request | Response |
 |---|---|---|---|
-| GET | `/api/v1/admin/incidents` | — | incidents list |
+| GET | `/api/v1/admin/incidents?type=double_spend\|fraud_flag\|all` | — | incidents list (replaces the old separate `/admin/fraud`) |
 | POST | `/api/v1/admin/revoke` | revoke a device cert | revocation result |
-| GET | `/api/v1/admin/fraud` | — | fraud incidents |
 | POST | `/api/v1/admin/disaster/toggle` | enable/disable by region | toggle result |
 
 ## Authentication
@@ -137,6 +136,10 @@ paths:
   /auth/verify:
     post:
       summary: Prove possession of the device key over the issued nonce, get a session token
+      description: >
+        Decided: the server looks up the device's public key (via its current, non-revoked
+        certificate) by device_id, then verifies signed_nonce as an Ed25519 signature over the
+        nonce previously issued by /auth/challenge.
       security: []
       requestBody:
         required: true
@@ -145,17 +148,15 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [signed_nonce]
+              required: [device_id, signed_nonce]
               properties:
+                device_id:
+                  type: string
+                  format: uuid
+                  description: Identifies which device's public key to verify signed_nonce against.
                 signed_nonce:
                   type: string
-                  description: >
-                    base64url Ed25519 signature over the nonce from /auth/challenge.
-                    Open question: kickoff's request body is just {signed_nonce} with no
-                    device_id — the server needs to know which device's public key to verify
-                    against, which implies either (a) /auth/challenge must also take/return a
-                    device_id binding, or (b) this request needs a device_id field too. Flag
-                    for next sync; not resolved here.
+                  description: base64url Ed25519 signature over the nonce from /auth/challenge.
       responses:
         "200":
           description: Verified
@@ -252,6 +253,15 @@ paths:
   /sync/transactions:
     post:
       summary: Upload a batch of signed offline transactions
+      description: >
+        Decided spend-enforcement rule (see purse-token-format.md#spend-enforcement-decided):
+        the purse token's signature covers only its issuance-time value, so the backend does not
+        re-verify a "current value." Instead, for each token_id referenced by the uploaded
+        transactions, the backend (1) checks device_counter/prev_tx_hash continuity to confirm
+        it has the complete spend history for that token, (2) verifies
+        sum(transaction.amount for that token_id) <= the token's signed value, and (3) verifies
+        each individual transaction.amount <= the token's signed cap. Transactions that fail
+        these checks are rejected at sync, not accepted-then-reconciled.
       requestBody:
         required: true
         content:
@@ -400,11 +410,19 @@ paths:
 
   /admin/incidents:
     get:
-      summary: List operational incidents
+      summary: List operational incidents, optionally filtered by type
       description: >
-        Open question: kickoff lists this separately from /admin/fraud — confirm whether
-        "incidents" is a broader ops category (outages, disputes) distinct from fraud-specific
-        cases, or whether these two endpoints overlap and should be merged.
+        Decided: this endpoint replaces the separate /admin/fraud endpoint. Fraud cases are
+        incidents with type=fraud_flag, not a distinct resource.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [double_spend, fraud_flag, all]
+            default: all
+          description: Filter incidents by type; omit or "all" for every incident type.
       responses:
         "200":
           description: Incidents list
@@ -418,7 +436,12 @@ paths:
                     type: array
                     items:
                       type: object
-                      description: Shape TBD.
+                      required: [type]
+                      description: Shape TBD beyond the type discriminator.
+                      properties:
+                        type:
+                          type: string
+                          enum: [double_spend, fraud_flag]
 
   /admin/revoke:
     post:
@@ -454,24 +477,6 @@ paths:
                   revoked_at:
                     type: integer
                     description: Unix epoch seconds.
-
-  /admin/fraud:
-    get:
-      summary: List fraud incidents
-      responses:
-        "200":
-          description: Fraud incidents list
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [incidents]
-                properties:
-                  incidents:
-                    type: array
-                    items:
-                      type: object
-                      description: Shape TBD.
 
   /admin/disaster/toggle:
     post:

@@ -32,9 +32,10 @@ transport:
 -----END SPARK DEVICE CERTIFICATE-----
 ```
 
-See [canonical-serialization.md](canonical-serialization.md#pem-envelopes-vs-field-encoding) for
-why this is a *different* base64 variant than the base64url used for `device_public_key`/
-`signature` inside the JSON — don't conflate the two when writing a parser.
+This is standard PEM base64 (RFC 7468), a *different* variant than the base64url used for
+`device_public_key`/`signature` inside the JSON — the rule for which variant applies where is
+decided once in [crypto.md](crypto.md#encoding-decided); don't conflate the two when writing a
+parser.
 
 ## Issuance
 
