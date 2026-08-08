@@ -11,6 +11,7 @@ jest.mock('../../../src/db/client', () => {
   const devicesByPublicKey = new Map<string, Record<string, unknown>>();
   const revokedCerts = new Map<string, { certSerial: string; revokedAt: Date; reason: string }>();
   const disasterEvents: Array<Record<string, unknown> & { active: boolean }> = [];
+  const trustEdgesById = new Map<string, Record<string, unknown> & { id: string; subjectA: string; subjectB: string }>();
 
   return {
     __esModule: true,
@@ -102,6 +103,24 @@ jest.mock('../../../src/db/client', () => {
           return disasterEvents.filter((e) => e.active === where.active);
         },
       },
+      trustAttestation: {
+        findMany: async ({
+          where,
+        }: {
+          where?: { OR?: Array<{ subjectA?: string; subjectB?: string }> };
+        } = {}) => {
+          const all = [...trustEdgesById.values()];
+          if (!where?.OR) {
+            return all;
+          }
+          return all.filter((e) => where.OR!.some((clause) => e.subjectA === clause.subjectA || e.subjectB === clause.subjectB));
+        },
+        create: async ({ data }: { data: Record<string, unknown> & { subjectA: string; subjectB: string } }) => {
+          const record = { id: randomUUID(), ...data };
+          trustEdgesById.set(record.id, record);
+          return record;
+        },
+      },
     },
     __revokeAt: (certSerial: string, epochSeconds: number, reason = 'test revocation') => {
       revokedCerts.set(certSerial, { certSerial, revokedAt: new Date(epochSeconds * 1000), reason });
@@ -111,7 +130,7 @@ jest.mock('../../../src/db/client', () => {
 
 import { FastifyInstance } from 'fastify';
 import { buildServer } from '../../../src/server';
-import { base64urlDecode, ed25519Sign, generateEd25519KeyPair } from '../../../src/crypto';
+import { base64urlDecode, ed25519Sign, generateEd25519KeyPair, pemDecode } from '../../../src/crypto';
 import { enrollTestDevice, TestDevice } from '../../helpers/makeSignedTx';
 
 const { __revokeAt } = jest.requireMock('../../../src/db/client') as {
@@ -255,6 +274,42 @@ describe('GET /api/v1/sync/updates', () => {
       }),
     );
     expect(typeof flags[0].started_at).toBe('number');
+  });
+
+  it('includes real (non-empty) trust_attestations when the device has settlement history', async () => {
+    const deviceA = await enrollTestDevice(app);
+    const deviceB = await enrollTestDevice(app);
+    const [subjectA, subjectB] = [deviceA.deviceId, deviceB.deviceId].sort();
+
+    const { prisma } = jest.requireMock('../../../src/db/client') as {
+      prisma: { trustAttestation: { create: (args: { data: Record<string, unknown> }) => Promise<unknown> } };
+    };
+    // Signature isn't verified by this test (that's covered in tests/api/trust/routes.test.ts) —
+    // this is testing that /sync/updates wires the field to real query results, not that the
+    // settlement engine signs correctly.
+    await prisma.trustAttestation.create({
+      data: {
+        subjectA,
+        subjectB,
+        settledAmount: '12000',
+        settlementCount: 2,
+        timestamp: new Date(),
+        lastSettledAt: new Date(),
+        signature: 'placeholder-signature-not-verified-by-this-test',
+      },
+    });
+
+    const sessionToken = await getSessionToken(deviceA);
+    const response = await fetchSyncUpdates(sessionToken);
+    expect(response.statusCode).toBe(200);
+    const { trust_attestations } = response.json();
+    expect(trust_attestations).toHaveLength(1);
+
+    const json = JSON.parse(pemDecode('SPARK TRUST ATTESTATION', trust_attestations[0]).toString('utf8'));
+    expect(json.subject_a).toBe(subjectA);
+    expect(json.subject_b).toBe(subjectB);
+    expect(json.settled_amount).toBe('12000');
+    expect(json.settlement_count).toBe(2);
   });
 
   it('rejects a request with no Authorization header with 401', async () => {

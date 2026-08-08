@@ -162,15 +162,44 @@ model DisasterEvent {
   @@map("disaster_events")
 }
 
-// A trust attestation. Mirrors docs/trust-attestation-format.md.
+// A trust edge between two devices, summarizing SETTLED transaction history between them. Phase
+// 8: this table does double duty rather than splitting into a separate "raw state" table — see
+// src/settlement/trustEdges.ts for the full reasoning. Short version: subjectA/subjectB/
+// settledAmount/settlementCount/lastSettledAt are the MUTABLE accumulator (updated by the
+// settlement engine on every settle), and timestamp/signature are a Bank-signed snapshot of the
+// row's current field values, kept valid by re-signing on every update (write-time signing) —
+// GET /trust/attestations and GET /sync/updates serve straight from the stored signature, no
+// signing at read time. Existing columns (id, subjectA, subjectB, settledAmount, settlementCount,
+// timestamp, signature) are unchanged from the initial migration; only lastSettledAt and the
+// uniqueness constraint are new — see prisma/migrations for how this was added without touching
+// the already-applied initial migration.
 model TrustAttestation {
-  id               String   @id @default(uuid()) @db.Uuid
-  subjectA         String   @map("subject_a") @db.Uuid
-  subjectB         String   @map("subject_b") @db.Uuid
-  settledAmount    String   @map("settled_amount")
-  settlementCount  Int      @map("settlement_count")
-  timestamp        DateTime
-  signature        String
+  id              String   @id @default(uuid()) @db.Uuid
+  // JUDGMENT CALL (trust-attestation-format.md flags this as an open, unresolved question):
+  // symmetric, not directional. One edge per unordered {subject_a, subject_b} device pair,
+  // canonically stored in lexicographic order (subjectA < subjectB) so a settlement in either
+  // direction (A pays B, or B pays A) updates the SAME edge — see canonicalPair() in
+  // trustEdges.ts. The doc's kickoff sentence ("device_a settled X paise with device_b") reads
+  // symmetric; a directional design (separate "A→B" and "B→A" edges) was the documented
+  // alternative, not chosen here.
+  subjectA        String   @map("subject_a") @db.Uuid
+  subjectB        String   @map("subject_b") @db.Uuid
+  // JUDGMENT CALL (also flagged open in trust-attestation-format.md): cumulative all-time total,
+  // not a rolling window. Simpler, matches the "accumulating state" framing of this table.
+  // Phase 8's decaying-weight trust-CHAIN traversal is applied at query/scoring time on top of
+  // this cumulative total, not by windowing storage — revisit if that assumption turns out wrong.
+  settledAmount   String   @map("settled_amount")
+  settlementCount Int      @map("settlement_count")
+  // When this attestation's signature/timestamp were last (re)generated. Always equal to
+  // lastSettledAt today (write-time signing means every settlement re-signs immediately), kept as
+  // a separate field/column from lastSettledAt for forward-compatibility if signing ever moves
+  // off the hot settlement path (e.g. periodic re-signing) — at that point the two could diverge.
+  timestamp       DateTime
+  // New in Phase 8. When this edge was last actually updated by a settled transaction — see the
+  // comment on `timestamp` above for why this is a separate column rather than reusing it.
+  lastSettledAt   DateTime @map("last_settled_at")
+  signature       String
 
+  @@unique([subjectA, subjectB])
   @@map("trust_attestations")
 }

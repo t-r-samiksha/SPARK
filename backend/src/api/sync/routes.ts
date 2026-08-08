@@ -3,6 +3,7 @@ import { prisma } from '../../db/client';
 import { requireSession } from '../auth/requireSession';
 import { settleTransactionBatch } from '../../settlement/engine';
 import { getRecommendedCap } from '../purse/limitStub';
+import { buildAttestationPem } from '../trust/buildAttestationPem';
 import { Transaction } from '../../types';
 
 // Mirrors the `party` and `Transaction` schemas in docs/api-contract.md /
@@ -137,6 +138,13 @@ export default async function syncRoutes(fastify: FastifyInstance): Promise<void
       // location data exists.
       const activeDisasters = await prisma.disasterEvent.findMany({ where: { active: true } });
 
+      // Trust attestations involving the calling device — same query shape and PEM-building logic
+      // as GET /trust/attestations (see buildAttestationPem.ts), unfiltered by `since` (that
+      // cursor only applies to the CRL above; attestations don't have a delta mechanism yet).
+      const trustEdges = await prisma.trustAttestation.findMany({
+        where: { OR: [{ subjectA: deviceId }, { subjectB: deviceId }] },
+      });
+
       // Best-effort observability write — see the field comment on Device.lastSyncUpdatesAt in
       // schema.prisma for why this isn't part of the delta computation itself.
       await prisma.device.updateMany({ where: { deviceId }, data: { lastSyncUpdatesAt: new Date() } });
@@ -164,8 +172,7 @@ export default async function syncRoutes(fastify: FastifyInstance): Promise<void
         // Not in docs/api-contract.md today — same field name as GET /limit/recommendation's own
         // response for consistency. Still Member C's placeholder (see limitStub.ts).
         recommended_cap: getRecommendedCap(),
-        // TODO: real trust-graph logic belongs to Member C — wiring the response shape only.
-        trust_attestations: [],
+        trust_attestations: trustEdges.map(buildAttestationPem),
       });
     },
   );

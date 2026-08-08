@@ -8,6 +8,7 @@ import {
   findWithinBatchConflicts,
   recordDoubleSpendIncident,
 } from './doubleSpendResolver';
+import { upsertTrustEdge } from './trustEdges';
 
 // Settlement engine for POST /api/v1/sync/transactions. Orchestrates, per
 // docs/purse-token-format.md#spend-enforcement-decided and docs/api-contract.md's
@@ -361,29 +362,39 @@ export async function settleTransactionBatch(transactions: Transaction[]): Promi
     }
   }
 
-  // --- Phase 5: persist ------------------------------------------------------------------------
+  // --- Phase 5: persist + update trust edges ----------------------------------------------------
+  // Interactive transaction (not the array form used before Phase 8): each accepted transaction
+  // needs a persisted row AND a trust-edge upsert, and the edge upsert is read-then-write logic
+  // (look up the existing edge, then create or update) that can't be expressed as a flat array of
+  // independent operations. Both happen atomically per transaction, and the whole batch is one DB
+  // transaction — a crash partway through can never leave a settled transaction without its trust
+  // update, or a trust update without the transaction that justified it.
   if (accepted.length > 0) {
-    await prisma.$transaction(
-      accepted.map(({ transaction: tx }) =>
-        prisma.transaction.create({
+    await prisma.$transaction(async (tx) => {
+      for (const { transaction: settledTx } of accepted) {
+        await tx.transaction.create({
           data: {
-            txId: tx.tx_id,
-            tokenId: tx.token_id,
-            amount: tx.amount,
-            payerDeviceId: tx.payer.device_id,
-            payerAccountId: tx.payer.account_id,
-            payerCert: tx.payer.cert,
-            payeeDeviceId: tx.payee.device_id,
-            payeeAccountId: tx.payee.account_id,
-            payeeCert: tx.payee.cert,
-            deviceCounter: tx.device_counter,
-            prevTxHash: tx.prev_tx_hash,
-            timestamp: tx.timestamp,
-            signature: tx.signature,
+            txId: settledTx.tx_id,
+            tokenId: settledTx.token_id,
+            amount: settledTx.amount,
+            payerDeviceId: settledTx.payer.device_id,
+            payerAccountId: settledTx.payer.account_id,
+            payerCert: settledTx.payer.cert,
+            payeeDeviceId: settledTx.payee.device_id,
+            payeeAccountId: settledTx.payee.account_id,
+            payeeCert: settledTx.payee.cert,
+            deviceCounter: settledTx.device_counter,
+            prevTxHash: settledTx.prev_tx_hash,
+            timestamp: settledTx.timestamp,
+            signature: settledTx.signature,
           },
-        }),
-      ),
-    );
+        });
+
+        // Trust edges are written HERE ONLY, for transactions that just settled — never for
+        // rejected/duplicate/flagged ones. See trustEdges.ts for the Sybil-resistance rationale.
+        await upsertTrustEdge(tx, settledTx.payer.device_id, settledTx.payee.device_id, settledTx.amount);
+      }
+    });
   }
 
   return { results, incidents };

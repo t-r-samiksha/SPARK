@@ -13,6 +13,7 @@ jest.mock('../../../src/db/client', () => {
   const revokedCerts = new Map<string, { certSerial: string; revokedAt: Date; reason: string }>();
   const incidents: Array<Record<string, unknown>> = [];
   const transactionsById = new Map<string, Record<string, unknown> & { tokenId: string; deviceCounter: number }>();
+  const trustEdgesById = new Map<string, Record<string, unknown> & { id: string; subjectA: string; subjectB: string }>();
 
   const client = {
     account: {
@@ -149,6 +150,38 @@ jest.mock('../../../src/db/client', () => {
         const record = { id: randomUUID(), detectedAt: new Date(), ...data };
         incidents.push(record);
         return record;
+      },
+    },
+    trustAttestation: {
+      findUnique: async ({
+        where,
+      }: {
+        where: { subjectA_subjectB: { subjectA: string; subjectB: string } };
+      }) => {
+        const { subjectA, subjectB } = where.subjectA_subjectB;
+        return (
+          [...trustEdgesById.values()].find((e) => e.subjectA === subjectA && e.subjectB === subjectB) ?? null
+        );
+      },
+      findMany: async ({ where }: { where?: { OR?: Array<{ subjectA?: string; subjectB?: string }> } } = {}) => {
+        const all = [...trustEdgesById.values()];
+        if (!where?.OR) {
+          return all;
+        }
+        return all.filter((e) => where.OR!.some((clause) => e.subjectA === clause.subjectA || e.subjectB === clause.subjectB));
+      },
+      create: async ({ data }: { data: Record<string, unknown> & { subjectA: string; subjectB: string } }) => {
+        const record = { id: randomUUID(), ...data };
+        trustEdgesById.set(record.id, record);
+        return record;
+      },
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const edge = trustEdgesById.get(where.id);
+        if (!edge) {
+          throw new Error(`trust edge not found in fake store: ${where.id}`);
+        }
+        Object.assign(edge, data);
+        return edge;
       },
     },
     // Handles both Prisma $transaction forms used across the codebase: an array of already-
@@ -493,5 +526,87 @@ describe('POST /api/v1/sync/transactions', () => {
       payload: { transactions: [] },
     });
     expect(response.statusCode).toBe(401);
+  });
+
+  describe('trust edges (Phase 8)', () => {
+    async function findTrustEdges(deviceId: string) {
+      const { prisma } = jest.requireMock('../../../src/db/client') as {
+        prisma: {
+          trustAttestation: {
+            findMany: (args: {
+              where: { OR: Array<{ subjectA?: string; subjectB?: string }> };
+            }) => Promise<Array<Record<string, unknown>>>;
+          };
+        };
+      };
+      return prisma.trustAttestation.findMany({
+        where: { OR: [{ subjectA: deviceId }, { subjectB: deviceId }] },
+      });
+    }
+
+    it('creates a trust edge between payer and payee when a transaction settles, and updates it (not a duplicate) on a second settlement', async () => {
+      const payer = await enrollTestDevice(app);
+      const payee = await enrollTestDevice(app);
+      const token = await loadPurseToken(payer, '100000');
+      const callerSession = await getSessionToken(payee);
+
+      const tx1 = makeSignedTx({
+        payer,
+        payee,
+        tokenId: token.tokenId,
+        amount: '10000',
+        deviceCounter: token.counterStart,
+        prevTx: null,
+      });
+      const settle1 = await syncBatch(callerSession, [tx1]);
+      expect(settle1.json().results).toEqual([{ tx_id: tx1.tx_id, status: 'accepted' }]);
+
+      const edgesAfterFirst = await findTrustEdges(payer.deviceId);
+      expect(edgesAfterFirst).toHaveLength(1);
+      expect(edgesAfterFirst[0]).toEqual(
+        expect.objectContaining({ settledAmount: '10000', settlementCount: 1 }),
+      );
+      expect([edgesAfterFirst[0].subjectA, edgesAfterFirst[0].subjectB].sort()).toEqual(
+        [payer.deviceId, payee.deviceId].sort(),
+      );
+
+      const tx2 = makeSignedTx({
+        payer,
+        payee,
+        tokenId: token.tokenId,
+        amount: '5000',
+        deviceCounter: token.counterStart + 1,
+        prevTx: tx1,
+      });
+      const settle2 = await syncBatch(callerSession, [tx2]);
+      expect(settle2.json().results).toEqual([{ tx_id: tx2.tx_id, status: 'accepted' }]);
+
+      const edgesAfterSecond = await findTrustEdges(payer.deviceId);
+      expect(edgesAfterSecond).toHaveLength(1); // same edge updated, not a second one
+      expect(edgesAfterSecond[0].settledAmount).toBe('15000');
+      expect(edgesAfterSecond[0].settlementCount).toBe(2);
+    });
+
+    it('does NOT create or update a trust edge for a transaction that fails to settle', async () => {
+      const payer = await enrollTestDevice(app);
+      const payee = await enrollTestDevice(app);
+      const token = await loadPurseToken(payer, '100000');
+      const callerSession = await getSessionToken(payee);
+
+      const tx = makeSignedTx({
+        payer,
+        payee,
+        tokenId: token.tokenId,
+        amount: '999999999', // exceeds the token's cap -> rejected, never settles
+        deviceCounter: token.counterStart,
+        prevTx: null,
+      });
+
+      const response = await syncBatch(callerSession, [tx]);
+      expect(response.json().results[0].status).toBe('rejected');
+
+      const edges = await findTrustEdges(payer.deviceId);
+      expect(edges).toEqual([]);
+    });
   });
 });

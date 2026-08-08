@@ -141,7 +141,12 @@ describe('POST /api/v1/auth/challenge + POST /api/v1/auth/verify', () => {
     const challengeRes = await challenge(device.deviceId);
     const { nonce } = challengeRes.json();
     const signedNonce = signNonce(device.privateSeed, nonce);
-    const tampered = signedNonce.slice(0, -1) + (signedNonce.endsWith('A') ? 'B' : 'A');
+    // Flip the FIRST character, not the last: a 64-byte signature base64url-encodes to 86 chars,
+    // and the final character's 6-bit group only carries 2 real payload bits (the other 4 are
+    // padding) — flipping it can land entirely in the padding and decode to the SAME bytes,
+    // making this test flaky (found via a real, if rare, spurious failure). The first character
+    // is part of a fully-utilized 6-bit group, so flipping it always changes the decoded bytes.
+    const tampered = (signedNonce[0] === 'A' ? 'B' : 'A') + signedNonce.slice(1);
 
     const verifyRes = await verify(device.deviceId, tampered);
     expect(verifyRes.statusCode).toBe(401);

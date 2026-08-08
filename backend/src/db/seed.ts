@@ -1,4 +1,5 @@
 import { prisma } from './client';
+import { DEMO_ACCOUNT_ID, DEMO_REAL_BALANCE_PAISE } from './demoAccount';
 
 // Demo/dev seed data — NOT for production. Creates a funded demo account so the team can
 // exercise POST /api/v1/purse/load without manually editing the database.
@@ -9,9 +10,10 @@ import { prisma } from './client';
 // This only creates the Account row — POST /api/v1/purse/load needs an enrolled *device* too.
 // After seeding, enroll a device against DEMO_ACCOUNT_ID via POST /api/v1/enroll to get a working
 // device + session for testing the full purse/load flow.
-
-const DEMO_ACCOUNT_ID = '00000000-0000-4000-8000-000000000001';
-const DEMO_REAL_BALANCE_PAISE = 5_000_000n; // ₹50,000
+//
+// This file runs main() unconditionally on load — it's a standalone script, not a pure module.
+// Other code that needs DEMO_ACCOUNT_ID must import it from ./demoAccount, not from here, or
+// importing it will trigger a real (and likely failing, if no DB is configured) seed run.
 
 async function main(): Promise<void> {
   const account = await prisma.account.upsert({
