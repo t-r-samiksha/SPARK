@@ -1,0 +1,93 @@
+// SPARK backend database schema.
+//
+// This is a first-pass scaffold matching the entities implied by docs/*-format.md — it will grow
+// as endpoint logic is implemented. Field types intentionally mirror the wire format docs:
+// amounts as strings (decimal paise, never float), UUIDs as String (Postgres `uuid` type via
+// @db.Uuid), signatures/keys as base64url text since that's how they're stored/compared on the
+// wire (raw bytes would need encoding back and forth for no benefit at hackathon scale).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Bank account holding one or more enrolled devices.
+model Account {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  devices   Device[]
+
+  @@map("accounts")
+}
+
+// A device certificate issued at /enroll. Mirrors docs/certificate-format.md.
+model Device {
+  deviceId        String    @id @default(uuid()) @map("device_id") @db.Uuid
+  accountId       String    @map("account_id") @db.Uuid
+  account         Account   @relation(fields: [accountId], references: [id])
+  // Dedup key for enrollment: the request to POST /enroll carries no device_id (the backend
+  // mints one — see docs/api-contract.md's /enroll schema), so "device already enrolled"
+  // (the 409 case in the doc) is detected by public key, not by an ID the caller doesn't have yet.
+  devicePublicKey String    @unique @map("device_public_key")
+  serialNumber    String    @unique @map("serial_number")
+  notBefore       DateTime  @map("not_before")
+  notAfter        DateTime  @map("not_after")
+  signature       String
+  revokedAt       DateTime? @map("revoked_at")
+  revokedReason   String?   @map("revoked_reason")
+
+  @@map("devices")
+}
+
+// A purse token issued at /purse/load or /purse/topup. Mirrors docs/purse-token-format.md.
+model PurseToken {
+  tokenId      String   @id @default(uuid()) @map("token_id") @db.Uuid
+  deviceId     String   @map("device_id") @db.Uuid
+  value        String
+  cap          String
+  counterStart Int      @map("counter_start")
+  expiry       Int
+  signature    String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("purse_tokens")
+}
+
+// A synced transaction. Mirrors docs/transaction-format.md. Payer/payee cert PEMs are stored
+// verbatim (not normalized to device rows) since a transaction must remain independently
+// verifiable from its own embedded certs, per the offline-verification design.
+model Transaction {
+  txId          String   @id @map("tx_id") @db.Uuid
+  tokenId       String   @map("token_id") @db.Uuid
+  amount        String
+  payerDeviceId String   @map("payer_device_id") @db.Uuid
+  payerAccountId String  @map("payer_account_id") @db.Uuid
+  payerCert     String   @map("payer_cert")
+  payeeDeviceId String   @map("payee_device_id") @db.Uuid
+  payeeAccountId String  @map("payee_account_id") @db.Uuid
+  payeeCert     String   @map("payee_cert")
+  deviceCounter Int      @map("device_counter")
+  prevTxHash    String?  @map("prev_tx_hash")
+  timestamp     Int
+  signature     String
+  syncedAt      DateTime @default(now()) @map("synced_at")
+
+  @@map("transactions")
+}
+
+// A trust attestation. Mirrors docs/trust-attestation-format.md.
+model TrustAttestation {
+  id               String   @id @default(uuid()) @db.Uuid
+  subjectA         String   @map("subject_a") @db.Uuid
+  subjectB         String   @map("subject_b") @db.Uuid
+  settledAmount    String   @map("settled_amount")
+  settlementCount  Int      @map("settlement_count")
+  timestamp        DateTime
+  signature        String
+
+  @@map("trust_attestations")
+}
