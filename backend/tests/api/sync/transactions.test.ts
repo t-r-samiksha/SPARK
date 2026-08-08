@@ -61,9 +61,12 @@ jest.mock('../../../src/db/client', () => {
             clientVersion: 'test',
           });
         }
-        devicesById.set(data.deviceId, data);
-        devicesByPublicKey.set(data.devicePublicKey, data);
-        return data;
+        // Match real Prisma's guarantee that unset nullable columns read back as null, not
+        // an omitted key.
+        const row = { revokedAt: null, revokedReason: null, ...data };
+        devicesById.set(data.deviceId, row);
+        devicesByPublicKey.set(data.devicePublicKey, row);
+        return row;
       },
       updateMany: async ({
         where,
@@ -122,8 +125,13 @@ jest.mock('../../../src/db/client', () => {
       }: {
         data: Record<string, unknown> & { txId: string; tokenId: string; deviceCounter: number };
       }) => {
-        transactionsById.set(data.txId, data);
-        return data;
+        // Real Prisma always returns null (never an omitted key) for a nullable column that
+        // wasn't included in `data` — engine.ts's normal (non-escrow) persist path never sets
+        // escrowContractId, relying on that DB default. Default it here so this fake matches
+        // that guarantee instead of leaving the key undefined.
+        const row = { escrowContractId: null, ...data };
+        transactionsById.set(data.txId, row);
+        return row;
       },
     },
     revokedCertificate: {
@@ -483,6 +491,66 @@ describe('POST /api/v1/sync/transactions', () => {
     expect(incidents[0]).toEqual(
       expect.objectContaining({ tx_id_a: txFirst.tx_id, tx_id_b: txConflicting.tx_id }),
     );
+  });
+
+  it('rejects a real transaction colliding with an escrow-settled slot with a clean "stale counter" error, not a double-spend incident', async () => {
+    const payer = await enrollTestDevice(app);
+    const payee = await enrollTestDevice(app);
+    const token = await loadPurseToken(payer, '100000');
+    const callerSession = await getSessionToken(payee);
+
+    const { prisma } = jest.requireMock('../../../src/db/client') as {
+      prisma: {
+        transaction: { create: (args: { data: Record<string, unknown> }) => Promise<unknown> };
+        device: { findUnique: (args: { where: { deviceId: string } }) => Promise<{ revokedAt: Date | null }> };
+      };
+    };
+
+    // Simulates what POST /escrow/release would have created: a settled transaction at this
+    // exact (token_id, device_counter) slot, with escrowContractId set — the device's local
+    // ledger doesn't know about this yet.
+    const escrowSettledTxId = randomUUID();
+    await prisma.transaction.create({
+      data: {
+        txId: escrowSettledTxId,
+        tokenId: token.tokenId,
+        amount: '15000',
+        payerDeviceId: payer.deviceId,
+        payerAccountId: randomUUID(),
+        payerCert: payer.certPem,
+        payeeDeviceId: payee.deviceId,
+        payeeAccountId: randomUUID(),
+        payeeCert: payee.certPem,
+        deviceCounter: token.counterStart,
+        prevTxHash: null,
+        timestamp: Math.floor(Date.now() / 1000),
+        signature: 'escrow-release-signature-placeholder',
+        escrowContractId: randomUUID(),
+      },
+    });
+
+    // The device, unaware of the escrow settlement, signs its own real transaction for the same
+    // slot — genuinely signed by the real device, not fraud, just stale local state.
+    const staleTx = makeSignedTx({
+      payer,
+      payee,
+      tokenId: token.tokenId,
+      amount: '10000',
+      deviceCounter: token.counterStart,
+      prevTx: null,
+    });
+
+    const response = await syncBatch(callerSession, [staleTx]);
+    expect(response.statusCode).toBe(200);
+    const { results, incidents } = response.json();
+
+    expect(results[0].status).toBe('rejected');
+    expect(results[0].reason).toMatch(/stale counter/i);
+    expect(results[0].reason).not.toMatch(/double-spend/i);
+    expect(incidents).toEqual([]); // no fraud incident recorded
+
+    const deviceRow = await prisma.device.findUnique({ where: { deviceId: payer.deviceId } });
+    expect(deviceRow?.revokedAt).toBeNull(); // device NOT revoked
   });
 
   it('rejects a transaction whose amount exceeds the token\'s cap', async () => {

@@ -1,0 +1,30 @@
+2e70d5c4627afd3d1a40b94264a6a125
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getActiveDisasterEvent = getActiveDisasterEvent;
+const client_1 = require("../db/client");
+/**
+ * Returns the currently-active DisasterEvent to apply, or null if none are active. Single query,
+ * reused wherever disaster-mode context is needed (currently POST /api/v1/purse/load — see that
+ * route for how `higher_cap` is applied).
+ *
+ * HACKATHON SIMPLIFICATION: no device-location field exists anywhere in the schema yet, so this
+ * treats ANY active DisasterEvent as globally applicable, rather than matching against the
+ * calling device's own region. Real version: filter by `region_geo` against the device's actual
+ * location once that data exists — see the same simplification already noted on GET
+ * /sync/updates' `flags` field in src/api/sync/routes.ts.
+ *
+ * JUDGMENT CALL: if multiple DisasterEvents are active simultaneously (possible once real
+ * region-matching exists, since different regions could each have their own active event), this
+ * returns the most recently started one — arbitrary but deterministic. Returning a single
+ * "canonical" active event only makes sense under the treat-everything-as-global simplification
+ * above; once region matching exists, callers should query by region instead of taking one global
+ * event.
+ */
+async function getActiveDisasterEvent() {
+    return client_1.prisma.disasterEvent.findFirst({
+        where: { active: true },
+        orderBy: { startedAt: 'desc' },
+    });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXHNldHRsZW1lbnRcXGRpc2FzdGVyQ29udGV4dC50cyIsIm1hcHBpbmdzIjoiOztBQW9CQSx3REFLQztBQXpCRCx5Q0FBc0M7QUFFdEM7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBaUJHO0FBQ0ksS0FBSyxVQUFVLHNCQUFzQjtJQUMxQyxPQUFPLGVBQU0sQ0FBQyxhQUFhLENBQUMsU0FBUyxDQUFDO1FBQ3BDLEtBQUssRUFBRSxFQUFFLE1BQU0sRUFBRSxJQUFJLEVBQUU7UUFDdkIsT0FBTyxFQUFFLEVBQUUsU0FBUyxFQUFFLE1BQU0sRUFBRTtLQUMvQixDQUFDLENBQUM7QUFDTCxDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkQ6XFxzYW1pa3NoYS13b3JrXFxTUEFSS1xcYmFja2VuZFxcc3JjXFxzZXR0bGVtZW50XFxkaXNhc3RlckNvbnRleHQudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgcHJpc21hIH0gZnJvbSAnLi4vZGIvY2xpZW50JztcblxuLyoqXG4gKiBSZXR1cm5zIHRoZSBjdXJyZW50bHktYWN0aXZlIERpc2FzdGVyRXZlbnQgdG8gYXBwbHksIG9yIG51bGwgaWYgbm9uZSBhcmUgYWN0aXZlLiBTaW5nbGUgcXVlcnksXG4gKiByZXVzZWQgd2hlcmV2ZXIgZGlzYXN0ZXItbW9kZSBjb250ZXh0IGlzIG5lZWRlZCAoY3VycmVudGx5IFBPU1QgL2FwaS92MS9wdXJzZS9sb2FkIOKAlCBzZWUgdGhhdFxuICogcm91dGUgZm9yIGhvdyBgaGlnaGVyX2NhcGAgaXMgYXBwbGllZCkuXG4gKlxuICogSEFDS0FUSE9OIFNJTVBMSUZJQ0FUSU9OOiBubyBkZXZpY2UtbG9jYXRpb24gZmllbGQgZXhpc3RzIGFueXdoZXJlIGluIHRoZSBzY2hlbWEgeWV0LCBzbyB0aGlzXG4gKiB0cmVhdHMgQU5ZIGFjdGl2ZSBEaXNhc3RlckV2ZW50IGFzIGdsb2JhbGx5IGFwcGxpY2FibGUsIHJhdGhlciB0aGFuIG1hdGNoaW5nIGFnYWluc3QgdGhlXG4gKiBjYWxsaW5nIGRldmljZSdzIG93biByZWdpb24uIFJlYWwgdmVyc2lvbjogZmlsdGVyIGJ5IGByZWdpb25fZ2VvYCBhZ2FpbnN0IHRoZSBkZXZpY2UncyBhY3R1YWxcbiAqIGxvY2F0aW9uIG9uY2UgdGhhdCBkYXRhIGV4aXN0cyDigJQgc2VlIHRoZSBzYW1lIHNpbXBsaWZpY2F0aW9uIGFscmVhZHkgbm90ZWQgb24gR0VUXG4gKiAvc3luYy91cGRhdGVzJyBgZmxhZ3NgIGZpZWxkIGluIHNyYy9hcGkvc3luYy9yb3V0ZXMudHMuXG4gKlxuICogSlVER01FTlQgQ0FMTDogaWYgbXVsdGlwbGUgRGlzYXN0ZXJFdmVudHMgYXJlIGFjdGl2ZSBzaW11bHRhbmVvdXNseSAocG9zc2libGUgb25jZSByZWFsXG4gKiByZWdpb24tbWF0Y2hpbmcgZXhpc3RzLCBzaW5jZSBkaWZmZXJlbnQgcmVnaW9ucyBjb3VsZCBlYWNoIGhhdmUgdGhlaXIgb3duIGFjdGl2ZSBldmVudCksIHRoaXNcbiAqIHJldHVybnMgdGhlIG1vc3QgcmVjZW50bHkgc3RhcnRlZCBvbmUg4oCUIGFyYml0cmFyeSBidXQgZGV0ZXJtaW5pc3RpYy4gUmV0dXJuaW5nIGEgc2luZ2xlXG4gKiBcImNhbm9uaWNhbFwiIGFjdGl2ZSBldmVudCBvbmx5IG1ha2VzIHNlbnNlIHVuZGVyIHRoZSB0cmVhdC1ldmVyeXRoaW5nLWFzLWdsb2JhbCBzaW1wbGlmaWNhdGlvblxuICogYWJvdmU7IG9uY2UgcmVnaW9uIG1hdGNoaW5nIGV4aXN0cywgY2FsbGVycyBzaG91bGQgcXVlcnkgYnkgcmVnaW9uIGluc3RlYWQgb2YgdGFraW5nIG9uZSBnbG9iYWxcbiAqIGV2ZW50LlxuICovXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2V0QWN0aXZlRGlzYXN0ZXJFdmVudCgpIHtcbiAgcmV0dXJuIHByaXNtYS5kaXNhc3RlckV2ZW50LmZpbmRGaXJzdCh7XG4gICAgd2hlcmU6IHsgYWN0aXZlOiB0cnVlIH0sXG4gICAgb3JkZXJCeTogeyBzdGFydGVkQXQ6ICdkZXNjJyB9LFxuICB9KTtcbn1cbiJdLCJ2ZXJzaW9uIjozfQ==

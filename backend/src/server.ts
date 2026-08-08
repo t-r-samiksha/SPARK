@@ -5,6 +5,7 @@ import purseRoutes from './api/purse/routes';
 import syncRoutes from './api/sync/routes';
 import trustRoutes from './api/trust/routes';
 import adminRoutes from './api/admin/routes';
+import escrowRoutes from './api/escrow/routes';
 
 export function buildServer(): FastifyInstance {
   // Fastify's default AJV config sets `removeAdditional: true`, which *silently strips* fields
@@ -27,6 +28,7 @@ export function buildServer(): FastifyInstance {
   app.register(syncRoutes, { prefix: '/api/v1' });
   app.register(trustRoutes, { prefix: '/api/v1' });
   app.register(adminRoutes, { prefix: '/api/v1' });
+  app.register(escrowRoutes, { prefix: '/api/v1' });
 
   return app;
 }

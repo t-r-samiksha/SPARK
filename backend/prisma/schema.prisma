@@ -91,6 +91,15 @@ model Transaction {
   timestamp     Int
   signature     String
   syncedAt      DateTime @default(now()) @map("synced_at")
+  // Phase 9 (escrow). Null for every normal synced transaction; set to the EscrowContract's id
+  // for a transaction created by POST /api/v1/escrow/release. See EscrowContract below and
+  // src/api/escrow/routes.ts for why: an escrow-settled row's `signature` is the buyer's
+  // confirmation signature over {escrow_id, condition}, NOT a device signature over this
+  // transaction's own canonical fields — it will NOT pass the normal
+  // verifyPayerCertificate + canonicalizeForSigning(tx) check every synced transaction's
+  // signature is held to. This column is how a reader (or future code) tells the two apart
+  // instead of silently mis-verifying an escrow row as if it were a normal one.
+  escrowContractId String? @map("escrow_contract_id") @db.Uuid
 
   // A genuine double-spend is exactly two DIFFERENT tx_ids claiming the same (token_id,
   // device_counter) slot — the settlement engine detects and rejects the second one before it
@@ -202,4 +211,43 @@ model TrustAttestation {
 
   @@unique([subjectA, subjectB])
   @@map("trust_attestations")
+}
+
+// Phase 9 — escrow, COOPERATIVE CASE ONLY: true trustless escrow needs a neutral third-party
+// holder we don't have offline, so this is "buyer locks funds, buyer later confirms release with
+// their own signature" — the Bank is a bookkeeper here, not an arbiter. See
+// src/api/escrow/routes.ts for the full flow and src/settlement/escrowLedger.ts for how "locked"
+// funds are represented (computed, not a mutable balance field — see that file for the reasoning).
+//
+// Fields beyond the task's literal list, both added out of functional necessity, not scope creep:
+//   - tokenId: which PurseToken the lock/settlement is against. Required to compute available
+//     balance at /escrow/create and to populate Transaction.tokenId (NOT NULL) at /escrow/release
+//     — without it there's no way to know which purse token the funds actually come from.
+//   - disputeReason: nothing currently *acts* on a dispute reason (no auto-resolution — see
+//     POST /escrow/dispute), but dropping caller-supplied text on the floor when a human will
+//     eventually need it to resolve the dispute manually seemed worse than one nullable column.
+model EscrowContract {
+  id             String    @id @default(uuid()) @db.Uuid
+  buyerDeviceId  String    @map("buyer_device_id") @db.Uuid
+  sellerDeviceId String    @map("seller_device_id") @db.Uuid
+  tokenId        String    @map("token_id") @db.Uuid
+  amount         String
+  // Freeform text describing what's being exchanged, per the task spec — no structured
+  // goods/services schema exists (or was asked for).
+  condition      String
+  // Plain String, not a Postgres/Prisma enum: matches this schema's existing convention for
+  // closed-but-small value sets (e.g. DisasterEvent.type) — validated at the application layer
+  // (Fastify JSON schema `enum`), not the DB layer. Valid values: locked | released | disputed |
+  // refunded. "refunded" is unreachable today — no endpoint in this phase sets it (no
+  // dispute-resolution flow exists yet) — included so the closed set matches the task's spec
+  // without needing another migration once a resolution flow exists.
+  status         String    @default("locked")
+  disputeReason  String?   @map("dispute_reason")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  // Set when status moves to a TERMINAL state (released or refunded). Deliberately NOT set when
+  // moving to disputed — "disputed" is an ongoing state awaiting (currently unimplemented)
+  // resolution, not a resolved one; see POST /escrow/dispute.
+  resolvedAt     DateTime? @map("resolved_at")
+
+  @@map("escrow_contracts")
 }

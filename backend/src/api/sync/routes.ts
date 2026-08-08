@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../db/client';
 import { requireSession } from '../auth/requireSession';
-import { settleTransactionBatch } from '../../settlement/engine';
+import { reconstructTransaction, settleTransactionBatch } from '../../settlement/engine';
 import { getRecommendedCap } from '../purse/limitStub';
 import { buildAttestationPem } from '../trust/buildAttestationPem';
 import { Transaction } from '../../types';
@@ -133,6 +133,29 @@ export default async function syncRoutes(fastify: FastifyInstance): Promise<void
         orderBy: { revokedAt: 'asc' },
       });
 
+      // Closes the escrow/sync counter-desync gap: POST /escrow/release advances a token's
+      // device_counter/prev_tx_hash chain server-side (see src/api/escrow/routes.ts), and the
+      // buyer's own offline device has no other way to learn that happened before its next real
+      // sync — without this, its next signed transaction would reuse a now-stale counter and get
+      // misread as a double-spend (see the isEscrowSettlement branch in
+      // src/settlement/doubleSpendResolver.ts and engine.ts's Phase 3). Reusing the exact
+      // Transaction wire shape (via reconstructTransaction, the same helper the settlement engine
+      // itself uses) rather than a bare {token_id, new_counter_start} pair is deliberate: the
+      // device can append this straight to its local ledger exactly like any other settled
+      // transaction, including recomputing its own hash for the NEXT prev_tx_hash link, instead
+      // of needing special-case handling for a "counter advancement" that isn't a real
+      // transaction. Same `since`/`>=` delta reasoning as the CRL above — scoped to
+      // payerDeviceId=this device, since only the PAYER's local chain can go stale this way (a
+      // seller has no device_counter chain of its own to desync).
+      const escrowSettlements = await prisma.transaction.findMany({
+        where: {
+          payerDeviceId: deviceId,
+          escrowContractId: { not: null },
+          ...(sinceDate ? { syncedAt: { gte: sinceDate } } : {}),
+        },
+        orderBy: { syncedAt: 'asc' },
+      });
+
       // Per the task: no device-location data exists yet, so every currently-active disaster
       // event goes to every device, unfiltered. Refine with real region matching once dashboard
       // location data exists.
@@ -149,13 +172,21 @@ export default async function syncRoutes(fastify: FastifyInstance): Promise<void
       // schema.prisma for why this isn't part of the delta computation itself.
       await prisma.device.updateMany({ where: { deviceId }, data: { lastSyncUpdatesAt: new Date() } });
 
+      const nowEpoch = Math.floor(Date.now() / 1000);
+
       return reply.code(200).send({
         crl: revoked.map((r) => r.certSerial),
         // Not in docs/api-contract.md today — the cursor a client should send back as `since` on
         // its next call. Using "now" (not the max revokedAt among returned rows) so an empty
         // delta still advances the cursor instead of the client re-querying the same window
         // forever.
-        crl_cursor: Math.floor(Date.now() / 1000),
+        crl_cursor: nowEpoch,
+        escrow_settlements: escrowSettlements.map(reconstructTransaction),
+        // A separate field from crl_cursor even though both equal "now" in this same response:
+        // they're conceptually independent delta streams (CRL vs. this device's escrow-settled
+        // transactions) that happen to share a computation instant today, not two names for the
+        // same cursor — a future change to either's update cadence shouldn't have to touch both.
+        escrow_settlements_cursor: nowEpoch,
         flags: activeDisasters.map((event) => ({
           // Discriminator for the flags array — docs/api-contract.md's open question about
           // `flags` explicitly considers "per-account fraud flags, disaster-mode region flags, or

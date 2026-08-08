@@ -12,6 +12,10 @@ jest.mock('../../../src/db/client', () => {
   const revokedCerts = new Map<string, { certSerial: string; revokedAt: Date; reason: string }>();
   const disasterEvents: Array<Record<string, unknown> & { active: boolean }> = [];
   const trustEdgesById = new Map<string, Record<string, unknown> & { id: string; subjectA: string; subjectB: string }>();
+  const transactionsById = new Map<
+    string,
+    Record<string, unknown> & { txId: string; payerDeviceId: string; escrowContractId: string | null; syncedAt: Date }
+  >();
 
   return {
     __esModule: true,
@@ -121,9 +125,28 @@ jest.mock('../../../src/db/client', () => {
           return record;
         },
       },
+      transaction: {
+        findMany: async ({
+          where,
+        }: {
+          where: { payerDeviceId: string; escrowContractId?: { not: null }; syncedAt?: { gte: Date } };
+        }) => {
+          return [...transactionsById.values()]
+            .filter(
+              (t) =>
+                t.payerDeviceId === where.payerDeviceId &&
+                (where.escrowContractId === undefined || t.escrowContractId !== null) &&
+                (where.syncedAt === undefined || t.syncedAt >= where.syncedAt.gte),
+            )
+            .sort((a, b) => a.syncedAt.getTime() - b.syncedAt.getTime());
+        },
+      },
     },
     __revokeAt: (certSerial: string, epochSeconds: number, reason = 'test revocation') => {
       revokedCerts.set(certSerial, { certSerial, revokedAt: new Date(epochSeconds * 1000), reason });
+    },
+    __createEscrowSettledTransaction: (data: Record<string, unknown> & { txId: string; payerDeviceId: string; escrowContractId: string }) => {
+      transactionsById.set(data.txId, { syncedAt: new Date(), ...data });
     },
   };
 });
@@ -310,6 +333,58 @@ describe('GET /api/v1/sync/updates', () => {
     expect(json.subject_b).toBe(subjectB);
     expect(json.settled_amount).toBe('12000');
     expect(json.settlement_count).toBe(2);
+  });
+
+  it('includes escrow-settled transactions for the calling (payer/buyer) device', async () => {
+    const buyer = await enrollTestDevice(app);
+    const seller = await enrollTestDevice(app);
+
+    const { __createEscrowSettledTransaction } = jest.requireMock('../../../src/db/client') as {
+      __createEscrowSettledTransaction: (data: Record<string, unknown>) => void;
+    };
+    const txId = randomUUID();
+    const tokenId = randomUUID();
+    const escrowId = randomUUID();
+    __createEscrowSettledTransaction({
+      txId,
+      tokenId,
+      amount: '20000',
+      payerDeviceId: buyer.deviceId,
+      payerAccountId: randomUUID(),
+      payerCert: buyer.certPem,
+      payeeDeviceId: seller.deviceId,
+      payeeAccountId: randomUUID(),
+      payeeCert: seller.certPem,
+      deviceCounter: 0,
+      prevTxHash: null,
+      timestamp: Math.floor(Date.now() / 1000),
+      signature: 'escrow-release-signature-placeholder',
+      escrowContractId: escrowId,
+    });
+
+    const sessionToken = await getSessionToken(buyer);
+    const response = await fetchSyncUpdates(sessionToken);
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.escrow_settlements).toHaveLength(1);
+    expect(body.escrow_settlements[0]).toEqual(
+      expect.objectContaining({
+        tx_id: txId,
+        token_id: tokenId,
+        amount: '20000',
+        device_counter: 0,
+        prev_tx_hash: null,
+      }),
+    );
+    expect(body.escrow_settlements[0].payer.device_id).toBe(buyer.deviceId);
+    expect(body.escrow_settlements[0].payee.device_id).toBe(seller.deviceId);
+    expect(typeof body.escrow_settlements_cursor).toBe('number');
+
+    // Not returned for the seller — only the payer's local counter chain can go stale this way.
+    const sellerSession = await getSessionToken(seller);
+    const sellerResponse = await fetchSyncUpdates(sellerSession);
+    expect(sellerResponse.json().escrow_settlements).toEqual([]);
   });
 
   it('rejects a request with no Authorization header with 401', async () => {

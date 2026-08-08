@@ -44,7 +44,7 @@ export interface SettlementBatchResult {
   incidents: IncidentSummary[];
 }
 
-interface PersistedTransactionRow {
+export interface PersistedTransactionRow {
   txId: string;
   tokenId: string;
   amount: string;
@@ -60,7 +60,10 @@ interface PersistedTransactionRow {
   signature: string;
 }
 
-function reconstructTransaction(row: PersistedTransactionRow): Transaction {
+// Exported so src/api/escrow/routes.ts can extend the SAME device_counter/prev_tx_hash chain an
+// escrow settlement's token_id already has from normal synced transactions — see that file for
+// why an escrow-settled transaction needs to participate in this chain at all.
+export function reconstructTransaction(row: PersistedTransactionRow): Transaction {
   return {
     tx_id: row.txId,
     token_id: row.tokenId,
@@ -248,6 +251,25 @@ export async function settleTransactionBatch(transactions: Transaction[]): Promi
     }
     const historyConflict = await findHistoryConflict(candidate);
     if (historyConflict) {
+      const idx = candidateIndex.get(candidate.transaction.tx_id)!;
+
+      if (historyConflict.isEscrowSettlement) {
+        // NOT fraud: this device didn't sign two conflicting transactions — an escrow settlement
+        // (POST /escrow/release) advanced this token's device_counter/prev_tx_hash chain
+        // server-side, and the device's local ledger doesn't know that yet, so it (correctly, by
+        // its own stale knowledge) reused a counter that's no longer free. No incident, no
+        // revocation — just a clean rejection telling it to catch up. See GET /sync/updates'
+        // escrow_settlements field for how the device is meant to learn the real chain state and
+        // re-chain its next transaction on top of it.
+        results[idx] = txResult(
+          candidate.transaction.tx_id,
+          'rejected',
+          `stale counter: (token_id, device_counter=${candidate.transaction.device_counter}) was already settled via escrow (tx_id ${historyConflict.txId}) — call GET /sync/updates to learn the current chain state and re-sign on top of it`,
+        );
+        conflictedTxIds.add(candidate.transaction.tx_id);
+        continue;
+      }
+
       const incident = await recordDoubleSpendIncident({
         tokenId: candidate.transaction.token_id,
         deviceId: candidate.transaction.payer.device_id,
@@ -263,7 +285,6 @@ export async function settleTransactionBatch(transactions: Transaction[]): Promi
         tx_id_b: incident.txIdB,
         detected_at: Math.floor(incident.detectedAt.getTime() / 1000),
       });
-      const idx = candidateIndex.get(candidate.transaction.tx_id)!;
       results[idx] = txResult(
         candidate.transaction.tx_id,
         'rejected',

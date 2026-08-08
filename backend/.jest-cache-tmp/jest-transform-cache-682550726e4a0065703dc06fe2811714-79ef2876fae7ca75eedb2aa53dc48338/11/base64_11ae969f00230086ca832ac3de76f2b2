@@ -1,0 +1,25 @@
+33922634d30b7090c0e961b1547a96eb
+"use strict";
+// Two base64 variants are used deliberately, at two different layers — see
+// docs/crypto.md#encoding-decided. Never conflate them:
+//   - base64url unpadded: values *inside* JSON (keys, signatures, hashes).
+//   - standard PEM base64, padded, 64-char lines: the outer envelope around a whole
+//     cert/purse-token/trust-attestation JSON object (see pem.ts).
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.base64urlEncode = base64urlEncode;
+exports.base64urlDecode = base64urlDecode;
+function base64urlEncode(data) {
+    return data.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function base64urlDecode(value) {
+    let padded = value.replace(/-/g, '+').replace(/_/g, '/');
+    const remainder = padded.length % 4;
+    if (remainder === 1) {
+        throw new Error(`invalid base64url length: ${value.length}`);
+    }
+    if (remainder > 0) {
+        padded += '='.repeat(4 - remainder);
+    }
+    return Buffer.from(padded, 'base64');
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXGNyeXB0b1xcYmFzZTY0LnRzIiwibWFwcGluZ3MiOiI7QUFBQSwyRUFBMkU7QUFDM0Usd0RBQXdEO0FBQ3hELDJFQUEyRTtBQUMzRSxvRkFBb0Y7QUFDcEYsbUVBQW1FOztBQUVuRSwwQ0FFQztBQUVELDBDQVVDO0FBZEQsU0FBZ0IsZUFBZSxDQUFDLElBQVk7SUFDMUMsT0FBTyxJQUFJLENBQUMsUUFBUSxDQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxLQUFLLEVBQUUsR0FBRyxDQUFDLENBQUMsT0FBTyxDQUFDLEtBQUssRUFBRSxHQUFHLENBQUMsQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLEVBQUUsQ0FBQyxDQUFDO0FBQzVGLENBQUM7QUFFRCxTQUFnQixlQUFlLENBQUMsS0FBYTtJQUMzQyxJQUFJLE1BQU0sR0FBRyxLQUFLLENBQUMsT0FBTyxDQUFDLElBQUksRUFBRSxHQUFHLENBQUMsQ0FBQyxPQUFPLENBQUMsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDO0lBQ3pELE1BQU0sU0FBUyxHQUFHLE1BQU0sQ0FBQyxNQUFNLEdBQUcsQ0FBQyxDQUFDO0lBQ3BDLElBQUksU0FBUyxLQUFLLENBQUMsRUFBRSxDQUFDO1FBQ3BCLE1BQU0sSUFBSSxLQUFLLENBQUMsNkJBQTZCLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0lBQy9ELENBQUM7SUFDRCxJQUFJLFNBQVMsR0FBRyxDQUFDLEVBQUUsQ0FBQztRQUNsQixNQUFNLElBQUksR0FBRyxDQUFDLE1BQU0sQ0FBQyxDQUFDLEdBQUcsU0FBUyxDQUFDLENBQUM7SUFDdEMsQ0FBQztJQUNELE9BQU8sTUFBTSxDQUFDLElBQUksQ0FBQyxNQUFNLEVBQUUsUUFBUSxDQUFDLENBQUM7QUFDdkMsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJEOlxcc2FtaWtzaGEtd29ya1xcU1BBUktcXGJhY2tlbmRcXHNyY1xcY3J5cHRvXFxiYXNlNjQudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gVHdvIGJhc2U2NCB2YXJpYW50cyBhcmUgdXNlZCBkZWxpYmVyYXRlbHksIGF0IHR3byBkaWZmZXJlbnQgbGF5ZXJzIOKAlCBzZWVcclxuLy8gZG9jcy9jcnlwdG8ubWQjZW5jb2RpbmctZGVjaWRlZC4gTmV2ZXIgY29uZmxhdGUgdGhlbTpcclxuLy8gICAtIGJhc2U2NHVybCB1bnBhZGRlZDogdmFsdWVzICppbnNpZGUqIEpTT04gKGtleXMsIHNpZ25hdHVyZXMsIGhhc2hlcykuXHJcbi8vICAgLSBzdGFuZGFyZCBQRU0gYmFzZTY0LCBwYWRkZWQsIDY0LWNoYXIgbGluZXM6IHRoZSBvdXRlciBlbnZlbG9wZSBhcm91bmQgYSB3aG9sZVxyXG4vLyAgICAgY2VydC9wdXJzZS10b2tlbi90cnVzdC1hdHRlc3RhdGlvbiBKU09OIG9iamVjdCAoc2VlIHBlbS50cykuXHJcblxyXG5leHBvcnQgZnVuY3Rpb24gYmFzZTY0dXJsRW5jb2RlKGRhdGE6IEJ1ZmZlcik6IHN0cmluZyB7XHJcbiAgcmV0dXJuIGRhdGEudG9TdHJpbmcoJ2Jhc2U2NCcpLnJlcGxhY2UoL1xcKy9nLCAnLScpLnJlcGxhY2UoL1xcLy9nLCAnXycpLnJlcGxhY2UoLz0rJC8sICcnKTtcclxufVxyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIGJhc2U2NHVybERlY29kZSh2YWx1ZTogc3RyaW5nKTogQnVmZmVyIHtcclxuICBsZXQgcGFkZGVkID0gdmFsdWUucmVwbGFjZSgvLS9nLCAnKycpLnJlcGxhY2UoL18vZywgJy8nKTtcclxuICBjb25zdCByZW1haW5kZXIgPSBwYWRkZWQubGVuZ3RoICUgNDtcclxuICBpZiAocmVtYWluZGVyID09PSAxKSB7XHJcbiAgICB0aHJvdyBuZXcgRXJyb3IoYGludmFsaWQgYmFzZTY0dXJsIGxlbmd0aDogJHt2YWx1ZS5sZW5ndGh9YCk7XHJcbiAgfVxyXG4gIGlmIChyZW1haW5kZXIgPiAwKSB7XHJcbiAgICBwYWRkZWQgKz0gJz0nLnJlcGVhdCg0IC0gcmVtYWluZGVyKTtcclxuICB9XHJcbiAgcmV0dXJuIEJ1ZmZlci5mcm9tKHBhZGRlZCwgJ2Jhc2U2NCcpO1xyXG59XHJcbiJdLCJ2ZXJzaW9uIjozfQ==

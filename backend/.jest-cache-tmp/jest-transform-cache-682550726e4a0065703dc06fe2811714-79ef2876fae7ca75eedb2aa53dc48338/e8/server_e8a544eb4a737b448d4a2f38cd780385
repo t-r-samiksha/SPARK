@@ -1,0 +1,38 @@
+70bfce9e9ca65a7457b0b619c2ef847d
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.buildServer = buildServer;
+const fastify_1 = __importDefault(require("fastify"));
+const routes_1 = __importDefault(require("./api/enroll/routes"));
+const routes_2 = __importDefault(require("./api/auth/routes"));
+const routes_3 = __importDefault(require("./api/purse/routes"));
+const routes_4 = __importDefault(require("./api/sync/routes"));
+const routes_5 = __importDefault(require("./api/trust/routes"));
+const routes_6 = __importDefault(require("./api/admin/routes"));
+const routes_7 = __importDefault(require("./api/escrow/routes"));
+function buildServer() {
+    // Fastify's default AJV config sets `removeAdditional: true`, which *silently strips* fields
+    // not listed in a route schema instead of rejecting the request. That's looser than what
+    // docs/api-contract.md specifies (`additionalProperties: false` on every request body) —
+    // override it so an unexpected field is a hard 400, matching the contract.
+    const app = (0, fastify_1.default)({
+        logger: true,
+        ajv: { customOptions: { removeAdditional: false } },
+    });
+    app.get('/health', async () => ({ status: 'ok' }));
+    // All route files declare paths exactly as they appear in docs/api-contract.md (e.g.
+    // `/limit/recommendation`, not nested under `/purse`), so every plugin shares the same
+    // `/api/v1` prefix rather than a per-domain one.
+    app.register(routes_1.default, { prefix: '/api/v1' });
+    app.register(routes_2.default, { prefix: '/api/v1' });
+    app.register(routes_3.default, { prefix: '/api/v1' });
+    app.register(routes_4.default, { prefix: '/api/v1' });
+    app.register(routes_5.default, { prefix: '/api/v1' });
+    app.register(routes_6.default, { prefix: '/api/v1' });
+    app.register(routes_7.default, { prefix: '/api/v1' });
+    return app;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXHNlcnZlci50cyIsIm1hcHBpbmdzIjoiOzs7OztBQVNBLGtDQXdCQztBQWpDRCxzREFBbUQ7QUFDbkQsaUVBQStDO0FBQy9DLCtEQUEyQztBQUMzQyxnRUFBNkM7QUFDN0MsK0RBQTJDO0FBQzNDLGdFQUE2QztBQUM3QyxnRUFBNkM7QUFDN0MsaUVBQStDO0FBRS9DLFNBQWdCLFdBQVc7SUFDekIsNkZBQTZGO0lBQzdGLHlGQUF5RjtJQUN6Rix5RkFBeUY7SUFDekYsMkVBQTJFO0lBQzNFLE1BQU0sR0FBRyxHQUFHLElBQUEsaUJBQU8sRUFBQztRQUNsQixNQUFNLEVBQUUsSUFBSTtRQUNaLEdBQUcsRUFBRSxFQUFFLGFBQWEsRUFBRSxFQUFFLGdCQUFnQixFQUFFLEtBQUssRUFBRSxFQUFFO0tBQ3BELENBQUMsQ0FBQztJQUVILEdBQUcsQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLEtBQUssSUFBSSxFQUFFLENBQUMsQ0FBQyxFQUFFLE1BQU0sRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDLENBQUM7SUFFbkQscUZBQXFGO0lBQ3JGLHVGQUF1RjtJQUN2RixpREFBaUQ7SUFDakQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBWSxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDbEQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBVSxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDaEQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBVyxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDakQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBVSxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDaEQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBVyxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDakQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBVyxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFDakQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQkFBWSxFQUFFLEVBQUUsTUFBTSxFQUFFLFNBQVMsRUFBRSxDQUFDLENBQUM7SUFFbEQsT0FBTyxHQUFHLENBQUM7QUFDYixDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkQ6XFxzYW1pa3NoYS13b3JrXFxTUEFSS1xcYmFja2VuZFxcc3JjXFxzZXJ2ZXIudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IEZhc3RpZnksIHsgRmFzdGlmeUluc3RhbmNlIH0gZnJvbSAnZmFzdGlmeSc7XHJcbmltcG9ydCBlbnJvbGxSb3V0ZXMgZnJvbSAnLi9hcGkvZW5yb2xsL3JvdXRlcyc7XHJcbmltcG9ydCBhdXRoUm91dGVzIGZyb20gJy4vYXBpL2F1dGgvcm91dGVzJztcclxuaW1wb3J0IHB1cnNlUm91dGVzIGZyb20gJy4vYXBpL3B1cnNlL3JvdXRlcyc7XHJcbmltcG9ydCBzeW5jUm91dGVzIGZyb20gJy4vYXBpL3N5bmMvcm91dGVzJztcclxuaW1wb3J0IHRydXN0Um91dGVzIGZyb20gJy4vYXBpL3RydXN0L3JvdXRlcyc7XHJcbmltcG9ydCBhZG1pblJvdXRlcyBmcm9tICcuL2FwaS9hZG1pbi9yb3V0ZXMnO1xyXG5pbXBvcnQgZXNjcm93Um91dGVzIGZyb20gJy4vYXBpL2VzY3Jvdy9yb3V0ZXMnO1xyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIGJ1aWxkU2VydmVyKCk6IEZhc3RpZnlJbnN0YW5jZSB7XHJcbiAgLy8gRmFzdGlmeSdzIGRlZmF1bHQgQUpWIGNvbmZpZyBzZXRzIGByZW1vdmVBZGRpdGlvbmFsOiB0cnVlYCwgd2hpY2ggKnNpbGVudGx5IHN0cmlwcyogZmllbGRzXHJcbiAgLy8gbm90IGxpc3RlZCBpbiBhIHJvdXRlIHNjaGVtYSBpbnN0ZWFkIG9mIHJlamVjdGluZyB0aGUgcmVxdWVzdC4gVGhhdCdzIGxvb3NlciB0aGFuIHdoYXRcclxuICAvLyBkb2NzL2FwaS1jb250cmFjdC5tZCBzcGVjaWZpZXMgKGBhZGRpdGlvbmFsUHJvcGVydGllczogZmFsc2VgIG9uIGV2ZXJ5IHJlcXVlc3QgYm9keSkg4oCUXHJcbiAgLy8gb3ZlcnJpZGUgaXQgc28gYW4gdW5leHBlY3RlZCBmaWVsZCBpcyBhIGhhcmQgNDAwLCBtYXRjaGluZyB0aGUgY29udHJhY3QuXHJcbiAgY29uc3QgYXBwID0gRmFzdGlmeSh7XHJcbiAgICBsb2dnZXI6IHRydWUsXHJcbiAgICBhanY6IHsgY3VzdG9tT3B0aW9uczogeyByZW1vdmVBZGRpdGlvbmFsOiBmYWxzZSB9IH0sXHJcbiAgfSk7XHJcblxyXG4gIGFwcC5nZXQoJy9oZWFsdGgnLCBhc3luYyAoKSA9PiAoeyBzdGF0dXM6ICdvaycgfSkpO1xyXG5cclxuICAvLyBBbGwgcm91dGUgZmlsZXMgZGVjbGFyZSBwYXRocyBleGFjdGx5IGFzIHRoZXkgYXBwZWFyIGluIGRvY3MvYXBpLWNvbnRyYWN0Lm1kIChlLmcuXHJcbiAgLy8gYC9saW1pdC9yZWNvbW1lbmRhdGlvbmAsIG5vdCBuZXN0ZWQgdW5kZXIgYC9wdXJzZWApLCBzbyBldmVyeSBwbHVnaW4gc2hhcmVzIHRoZSBzYW1lXHJcbiAgLy8gYC9hcGkvdjFgIHByZWZpeCByYXRoZXIgdGhhbiBhIHBlci1kb21haW4gb25lLlxyXG4gIGFwcC5yZWdpc3RlcihlbnJvbGxSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGF1dGhSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKHB1cnNlUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3RlcihzeW5jUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3Rlcih0cnVzdFJvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIoYWRtaW5Sb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGVzY3Jvd1JvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuXHJcbiAgcmV0dXJuIGFwcDtcclxufVxyXG4iXSwidmVyc2lvbiI6M30=

@@ -42,12 +42,27 @@ export function findWithinBatchConflicts(candidates: CandidateTx[]): Map<string,
   return conflicts;
 }
 
+export interface HistoryConflict {
+  txId: string;
+  /**
+   * True when the row already occupying this slot came from POST /escrow/release
+   * (Transaction.escrowContractId is set), not from a device-signed sync. This is NOT a
+   * double-spend — the same device didn't sign two conflicting transactions, an escrow
+   * settlement advanced this token's chain server-side and the device's local ledger is just
+   * stale relative to it. See engine.ts's Phase 3 for how the two cases are handled differently,
+   * and GET /sync/updates' `escrow_settlements` field for how a device is meant to learn about
+   * this and re-chain instead of hitting it blind.
+   */
+  isEscrowSettlement: boolean;
+}
+
 /**
  * Checks whether a candidate's (token_id, device_counter) slot is already claimed by a
- * DIFFERENT, previously-persisted (settled) transaction — a double-spend against history rather
- * than within the current batch.
+ * DIFFERENT, previously-persisted (settled) transaction — either a double-spend against history,
+ * or (see isEscrowSettlement above) a stale-counter collision with an escrow settlement, which
+ * looks identical at the slot level but isn't fraud.
  */
-export async function findHistoryConflict(candidate: CandidateTx): Promise<{ txId: string } | null> {
+export async function findHistoryConflict(candidate: CandidateTx): Promise<HistoryConflict | null> {
   const existing = await prisma.transaction.findUnique({
     where: {
       tokenId_deviceCounter: {
@@ -57,7 +72,7 @@ export async function findHistoryConflict(candidate: CandidateTx): Promise<{ txI
     },
   });
   if (existing && existing.txId !== candidate.transaction.tx_id) {
-    return { txId: existing.txId };
+    return { txId: existing.txId, isEscrowSettlement: existing.escrowContractId !== null };
   }
   return null;
 }
