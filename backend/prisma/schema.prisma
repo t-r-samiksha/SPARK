@@ -17,8 +17,8 @@ datasource db {
 
 // Bank account holding one or more enrolled devices.
 model Account {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
   // Simulates the bank's real, live account balance backing this SPARK account, in integer
   // paise. POST /purse/load debits this to fund an offline purse — see the comment at that route
   // for why this is a native BigInt (not the decimal-string convention used for signed wire
@@ -35,19 +35,19 @@ model Account {
 
 // A device certificate issued at /enroll. Mirrors docs/certificate-format.md.
 model Device {
-  deviceId        String    @id @default(uuid()) @map("device_id") @db.Uuid
-  accountId       String    @map("account_id") @db.Uuid
-  account         Account   @relation(fields: [accountId], references: [id])
+  deviceId          String    @id @default(uuid()) @map("device_id") @db.Uuid
+  accountId         String    @map("account_id") @db.Uuid
+  account           Account   @relation(fields: [accountId], references: [id])
   // Dedup key for enrollment: the request to POST /enroll carries no device_id (the backend
   // mints one — see docs/api-contract.md's /enroll schema), so "device already enrolled"
   // (the 409 case in the doc) is detected by public key, not by an ID the caller doesn't have yet.
-  devicePublicKey String    @unique @map("device_public_key")
-  serialNumber    String    @unique @map("serial_number")
-  notBefore       DateTime  @map("not_before")
-  notAfter        DateTime  @map("not_after")
-  signature       String
-  revokedAt       DateTime? @map("revoked_at")
-  revokedReason   String?   @map("revoked_reason")
+  devicePublicKey   String    @unique @map("device_public_key")
+  serialNumber      String    @unique @map("serial_number")
+  notBefore         DateTime  @map("not_before")
+  notAfter          DateTime  @map("not_after")
+  signature         String
+  revokedAt         DateTime? @map("revoked_at")
+  revokedReason     String?   @map("revoked_reason")
   // Last time this device successfully called GET /sync/updates. Informational/observability
   // only (e.g. "which devices haven't synced in a while") — NOT consulted to compute the CRL
   // delta, which is driven entirely by the client-supplied `since` query param instead. See the
@@ -77,20 +77,20 @@ model PurseToken {
 // verbatim (not normalized to device rows) since a transaction must remain independently
 // verifiable from its own embedded certs, per the offline-verification design.
 model Transaction {
-  txId          String   @id @map("tx_id") @db.Uuid
-  tokenId       String   @map("token_id") @db.Uuid
-  amount        String
-  payerDeviceId String   @map("payer_device_id") @db.Uuid
-  payerAccountId String  @map("payer_account_id") @db.Uuid
-  payerCert     String   @map("payer_cert")
-  payeeDeviceId String   @map("payee_device_id") @db.Uuid
-  payeeAccountId String  @map("payee_account_id") @db.Uuid
-  payeeCert     String   @map("payee_cert")
-  deviceCounter Int      @map("device_counter")
-  prevTxHash    String?  @map("prev_tx_hash")
-  timestamp     Int
-  signature     String
-  syncedAt      DateTime @default(now()) @map("synced_at")
+  txId             String   @id @map("tx_id") @db.Uuid
+  tokenId          String   @map("token_id") @db.Uuid
+  amount           String
+  payerDeviceId    String   @map("payer_device_id") @db.Uuid
+  payerAccountId   String   @map("payer_account_id") @db.Uuid
+  payerCert        String   @map("payer_cert")
+  payeeDeviceId    String   @map("payee_device_id") @db.Uuid
+  payeeAccountId   String   @map("payee_account_id") @db.Uuid
+  payeeCert        String   @map("payee_cert")
+  deviceCounter    Int      @map("device_counter")
+  prevTxHash       String?  @map("prev_tx_hash")
+  timestamp        Int
+  signature        String
+  syncedAt         DateTime @default(now()) @map("synced_at")
   // Phase 9 (escrow). Null for every normal synced transaction; set to the EscrowContract's id
   // for a transaction created by POST /api/v1/escrow/release. See EscrowContract below and
   // src/api/escrow/routes.ts for why: an escrow-settled row's `signature` is the buyer's
@@ -99,7 +99,7 @@ model Transaction {
   // verifyPayerCertificate + canonicalizeForSigning(tx) check every synced transaction's
   // signature is held to. This column is how a reader (or future code) tells the two apart
   // instead of silently mis-verifying an escrow row as if it were a normal one.
-  escrowContractId String? @map("escrow_contract_id") @db.Uuid
+  escrowContractId String?  @map("escrow_contract_id") @db.Uuid
 
   // A genuine double-spend is exactly two DIFFERENT tx_ids claiming the same (token_id,
   // device_counter) slot — the settlement engine detects and rejects the second one before it
@@ -132,12 +132,12 @@ model RevokedCertificate {
 // docs/*.md wire format — this is purely an internal admin/audit record, surfaced later via
 // GET /api/v1/admin/incidents (type=double_spend) once that endpoint is implemented.
 model DoubleSpendIncident {
-  id          String   @id @default(uuid()) @db.Uuid
-  tokenId     String   @map("token_id") @db.Uuid
-  deviceId    String   @map("device_id") @db.Uuid
-  txIdA       String   @map("tx_id_a") @db.Uuid
-  txIdB       String   @map("tx_id_b") @db.Uuid
-  detectedAt  DateTime @default(now()) @map("detected_at")
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenId    String   @map("token_id") @db.Uuid
+  deviceId   String   @map("device_id") @db.Uuid
+  txIdA      String   @map("tx_id_a") @db.Uuid
+  txIdB      String   @map("tx_id_b") @db.Uuid
+  detectedAt DateTime @default(now()) @map("detected_at")
 
   @@map("double_spend_incidents")
 }
@@ -250,4 +250,47 @@ model EscrowContract {
   resolvedAt     DateTime? @map("resolved_at")
 
   @@map("escrow_contracts")
+}
+
+// Phase 9 — Family Wallet: a parent account funds a scoped purse token for a child device, out of
+// the parent's own real_balance. See src/api/family/routes.ts for the full flow.
+//
+// Fields beyond the task's literal list, added out of the same functional necessity as
+// EscrowContract.tokenId above:
+//   - tokenId: which PurseToken this allocation minted for the child. Required so
+//     GET /family/activity can compute THIS allocation's own spent_amount from THAT token's
+//     settled transaction history specifically — without it there'd be no way to tell one
+//     allocation's spending apart from any other purse token the same child device has ever held
+//     (e.g. from a second allocation, or a normal, non-family /purse/load).
+//
+// spentAmount is part of the task's literal field list, but is deliberately NEVER read or written
+// by application code (it stays at its default forever) — see the "computed-not-stored" note at
+// GET /family/activity in src/api/family/routes.ts. Storing a live, mutable running-spend field
+// here would reintroduce exactly the "balance that can drift from what settled history actually
+// supports" risk escrowLedger.ts already rejected for escrow locks (see that file's reasoning);
+// the response always recomputes spent_amount fresh from the token's settled Transaction rows
+// instead, the same pattern getAvailablePurseBalance() uses. Kept as a real column rather than
+// dropped, since the task listed it explicitly — a future direct/administrative read of this table
+// (outside these two endpoints) shouldn't come up empty for a field it was told exists.
+model FamilyAllocation {
+  id              String   @id @default(uuid()) @db.Uuid
+  parentAccountId String   @map("parent_account_id") @db.Uuid
+  childDeviceId   String   @map("child_device_id") @db.Uuid
+  tokenId         String   @map("token_id") @db.Uuid
+  allocatedAmount String   @map("allocated_amount")
+  // See the model-level comment above — always "0", never updated; GET /family/activity ignores
+  // this column and computes the real figure on every read.
+  spentAmount     String   @default("0") @map("spent_amount")
+  // The EFFECTIVE cap actually minted into the child's purse token
+  // (min(requested cap, allocated_amount) — see POST /family/allocate), not the raw
+  // caller-requested value, so this column always matches what's really enforced rather than
+  // tracking two different numbers for the same allocation.
+  cap             String
+  // Defaults true; no endpoint in this phase sets it false (no revoke/deactivate flow was asked
+  // for) — included so the closed set matches the task's literal field list without needing
+  // another migration once one exists.
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("family_allocations")
 }

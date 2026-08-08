@@ -1,0 +1,40 @@
+c6c249c448e0936d7b67e4f95128f6b5
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.buildServer = buildServer;
+const fastify_1 = __importDefault(require("fastify"));
+const routes_1 = __importDefault(require("./api/enroll/routes"));
+const routes_2 = __importDefault(require("./api/auth/routes"));
+const routes_3 = __importDefault(require("./api/purse/routes"));
+const routes_4 = __importDefault(require("./api/sync/routes"));
+const routes_5 = __importDefault(require("./api/trust/routes"));
+const routes_6 = __importDefault(require("./api/admin/routes"));
+const routes_7 = __importDefault(require("./api/escrow/routes"));
+const routes_8 = __importDefault(require("./api/family/routes"));
+function buildServer() {
+    // Fastify's default AJV config sets `removeAdditional: true`, which *silently strips* fields
+    // not listed in a route schema instead of rejecting the request. That's looser than what
+    // docs/api-contract.md specifies (`additionalProperties: false` on every request body) —
+    // override it so an unexpected field is a hard 400, matching the contract.
+    const app = (0, fastify_1.default)({
+        logger: true,
+        ajv: { customOptions: { removeAdditional: false } },
+    });
+    app.get('/health', async () => ({ status: 'ok' }));
+    // All route files declare paths exactly as they appear in docs/api-contract.md (e.g.
+    // `/limit/recommendation`, not nested under `/purse`), so every plugin shares the same
+    // `/api/v1` prefix rather than a per-domain one.
+    app.register(routes_1.default, { prefix: '/api/v1' });
+    app.register(routes_2.default, { prefix: '/api/v1' });
+    app.register(routes_3.default, { prefix: '/api/v1' });
+    app.register(routes_4.default, { prefix: '/api/v1' });
+    app.register(routes_5.default, { prefix: '/api/v1' });
+    app.register(routes_6.default, { prefix: '/api/v1' });
+    app.register(routes_7.default, { prefix: '/api/v1' });
+    app.register(routes_8.default, { prefix: '/api/v1' });
+    return app;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXHNlcnZlci50cyIsIm1hcHBpbmdzIjoiOzs7OztBQVVBLGtDQXlCQztBQW5DRCxzREFBbUQ7QUFDbkQsaUVBQStDO0FBQy9DLCtEQUEyQztBQUMzQyxnRUFBNkM7QUFDN0MsK0RBQTJDO0FBQzNDLGdFQUE2QztBQUM3QyxnRUFBNkM7QUFDN0MsaUVBQStDO0FBQy9DLGlFQUErQztBQUUvQyxTQUFnQixXQUFXO0lBQ3pCLDZGQUE2RjtJQUM3Rix5RkFBeUY7SUFDekYseUZBQXlGO0lBQ3pGLDJFQUEyRTtJQUMzRSxNQUFNLEdBQUcsR0FBRyxJQUFBLGlCQUFPLEVBQUM7UUFDbEIsTUFBTSxFQUFFLElBQUk7UUFDWixHQUFHLEVBQUUsRUFBRSxhQUFhLEVBQUUsRUFBRSxnQkFBZ0IsRUFBRSxLQUFLLEVBQUUsRUFBRTtLQUNwRCxDQUFDLENBQUM7SUFFSCxHQUFHLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxLQUFLLElBQUksRUFBRSxDQUFDLENBQUMsRUFBRSxNQUFNLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBRW5ELHFGQUFxRjtJQUNyRix1RkFBdUY7SUFDdkYsaURBQWlEO0lBQ2pELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVksRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2xELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVUsRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2hELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVcsRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2pELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVUsRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2hELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVcsRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2pELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVcsRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2pELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVksRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBQ2xELEdBQUcsQ0FBQyxRQUFRLENBQUMsZ0JBQVksRUFBRSxFQUFFLE1BQU0sRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO0lBRWxELE9BQU8sR0FBRyxDQUFDO0FBQ2IsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJEOlxcc2FtaWtzaGEtd29ya1xcU1BBUktcXGJhY2tlbmRcXHNyY1xcc2VydmVyLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBGYXN0aWZ5LCB7IEZhc3RpZnlJbnN0YW5jZSB9IGZyb20gJ2Zhc3RpZnknO1xyXG5pbXBvcnQgZW5yb2xsUm91dGVzIGZyb20gJy4vYXBpL2Vucm9sbC9yb3V0ZXMnO1xyXG5pbXBvcnQgYXV0aFJvdXRlcyBmcm9tICcuL2FwaS9hdXRoL3JvdXRlcyc7XHJcbmltcG9ydCBwdXJzZVJvdXRlcyBmcm9tICcuL2FwaS9wdXJzZS9yb3V0ZXMnO1xyXG5pbXBvcnQgc3luY1JvdXRlcyBmcm9tICcuL2FwaS9zeW5jL3JvdXRlcyc7XHJcbmltcG9ydCB0cnVzdFJvdXRlcyBmcm9tICcuL2FwaS90cnVzdC9yb3V0ZXMnO1xyXG5pbXBvcnQgYWRtaW5Sb3V0ZXMgZnJvbSAnLi9hcGkvYWRtaW4vcm91dGVzJztcclxuaW1wb3J0IGVzY3Jvd1JvdXRlcyBmcm9tICcuL2FwaS9lc2Nyb3cvcm91dGVzJztcclxuaW1wb3J0IGZhbWlseVJvdXRlcyBmcm9tICcuL2FwaS9mYW1pbHkvcm91dGVzJztcclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBidWlsZFNlcnZlcigpOiBGYXN0aWZ5SW5zdGFuY2Uge1xyXG4gIC8vIEZhc3RpZnkncyBkZWZhdWx0IEFKViBjb25maWcgc2V0cyBgcmVtb3ZlQWRkaXRpb25hbDogdHJ1ZWAsIHdoaWNoICpzaWxlbnRseSBzdHJpcHMqIGZpZWxkc1xyXG4gIC8vIG5vdCBsaXN0ZWQgaW4gYSByb3V0ZSBzY2hlbWEgaW5zdGVhZCBvZiByZWplY3RpbmcgdGhlIHJlcXVlc3QuIFRoYXQncyBsb29zZXIgdGhhbiB3aGF0XHJcbiAgLy8gZG9jcy9hcGktY29udHJhY3QubWQgc3BlY2lmaWVzIChgYWRkaXRpb25hbFByb3BlcnRpZXM6IGZhbHNlYCBvbiBldmVyeSByZXF1ZXN0IGJvZHkpIOKAlFxyXG4gIC8vIG92ZXJyaWRlIGl0IHNvIGFuIHVuZXhwZWN0ZWQgZmllbGQgaXMgYSBoYXJkIDQwMCwgbWF0Y2hpbmcgdGhlIGNvbnRyYWN0LlxyXG4gIGNvbnN0IGFwcCA9IEZhc3RpZnkoe1xyXG4gICAgbG9nZ2VyOiB0cnVlLFxyXG4gICAgYWp2OiB7IGN1c3RvbU9wdGlvbnM6IHsgcmVtb3ZlQWRkaXRpb25hbDogZmFsc2UgfSB9LFxyXG4gIH0pO1xyXG5cclxuICBhcHAuZ2V0KCcvaGVhbHRoJywgYXN5bmMgKCkgPT4gKHsgc3RhdHVzOiAnb2snIH0pKTtcclxuXHJcbiAgLy8gQWxsIHJvdXRlIGZpbGVzIGRlY2xhcmUgcGF0aHMgZXhhY3RseSBhcyB0aGV5IGFwcGVhciBpbiBkb2NzL2FwaS1jb250cmFjdC5tZCAoZS5nLlxyXG4gIC8vIGAvbGltaXQvcmVjb21tZW5kYXRpb25gLCBub3QgbmVzdGVkIHVuZGVyIGAvcHVyc2VgKSwgc28gZXZlcnkgcGx1Z2luIHNoYXJlcyB0aGUgc2FtZVxyXG4gIC8vIGAvYXBpL3YxYCBwcmVmaXggcmF0aGVyIHRoYW4gYSBwZXItZG9tYWluIG9uZS5cclxuICBhcHAucmVnaXN0ZXIoZW5yb2xsUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3RlcihhdXRoUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3RlcihwdXJzZVJvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIoc3luY1JvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIodHJ1c3RSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGFkbWluUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3Rlcihlc2Nyb3dSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGZhbWlseVJvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuXHJcbiAgcmV0dXJuIGFwcDtcclxufVxyXG4iXSwidmVyc2lvbiI6M30=
