@@ -16,13 +16,26 @@ import { DEMO_ACCOUNT_ID, DEMO_REAL_BALANCE_PAISE } from './demoAccount';
 // importing it will trigger a real (and likely failing, if no DB is configured) seed run.
 
 async function main(): Promise<void> {
+  const before = await prisma.account.findUnique({ where: { id: DEMO_ACCOUNT_ID } });
+
   const account = await prisma.account.upsert({
     where: { id: DEMO_ACCOUNT_ID },
     create: { id: DEMO_ACCOUNT_ID, realBalance: DEMO_REAL_BALANCE_PAISE },
+    // Unconditional (not merged with the existing value): re-running this script is meant to
+    // RESET the demo account back to a known balance for repeatable local/smoke testing — e.g.
+    // after scripts/smokeTestTrust.ts debits it via /purse/load — not just "create if missing."
+    // Testing convenience only; nothing else in this codebase resets a real account's balance
+    // like this (real accounts are only ever debited, via /purse/load).
     update: { realBalance: DEMO_REAL_BALANCE_PAISE },
   });
 
-  console.log(`Seeded demo account ${account.id} with real_balance = ${account.realBalance} paise.`);
+  if (before) {
+    console.log(
+      `Reset demo account ${account.id}'s real_balance: ${before.realBalance} -> ${account.realBalance} paise.`,
+    );
+  } else {
+    console.log(`Created demo account ${account.id} with real_balance = ${account.realBalance} paise.`);
+  }
   console.log(`Enroll a device against account_id=${account.id} via POST /api/v1/enroll,`);
   console.log('then POST /api/v1/purse/load with that device\'s session to test against this balance.');
 }
