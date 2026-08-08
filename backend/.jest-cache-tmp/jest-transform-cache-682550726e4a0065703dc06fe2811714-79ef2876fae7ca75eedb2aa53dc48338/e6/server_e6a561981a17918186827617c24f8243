@@ -1,0 +1,71 @@
+b940d47d7bff1db05a34914dd9564bf6
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.buildServer = buildServer;
+const fastify_1 = __importDefault(require("fastify"));
+const rate_limit_1 = __importDefault(require("@fastify/rate-limit"));
+const routes_1 = __importDefault(require("./api/enroll/routes"));
+const routes_2 = __importDefault(require("./api/auth/routes"));
+const routes_3 = __importDefault(require("./api/purse/routes"));
+const routes_4 = __importDefault(require("./api/sync/routes"));
+const routes_5 = __importDefault(require("./api/trust/routes"));
+const routes_6 = __importDefault(require("./api/admin/routes"));
+const routes_7 = __importDefault(require("./api/escrow/routes"));
+const routes_8 = __importDefault(require("./api/family/routes"));
+const routes_9 = __importDefault(require("./api/sms/routes"));
+function buildServer(options = {}) {
+    // Fastify's default AJV config sets `removeAdditional: true`, which *silently strips* fields
+    // not listed in a route schema instead of rejecting the request. That's looser than what
+    // docs/api-contract.md specifies (`additionalProperties: false` on every request body) —
+    // override it so an unexpected field is a hard 400, matching the contract.
+    const app = (0, fastify_1.default)({
+        logger: true,
+        ajv: { customOptions: { removeAdditional: false } },
+    });
+    // HACKATHON-SCOPE, NOT PRODUCTION-GRADE: a flat, in-memory, per-process, per-IP limiter. It's
+    // defense against accidental hammering during testing/demo (e.g. a buggy client retry loop
+    // pointed at this server), not a real anti-abuse system — no distributed store (a second
+    // instance behind a load balancer would track its own separate counts), no per-route tuning,
+    // and trivially bypassed by rotating source IP. A production deployment would want a shared
+    // store (Redis, via the plugin's `store` option), tighter per-endpoint limits on
+    // sensitive/expensive routes (auth, sync/transactions), and real abuse detection — out of scope
+    // here.
+    //
+    // Registered before every route so the global default (`global: true` is this plugin's
+    // default) applies everywhere except where a route explicitly opts out via
+    // `config: { rateLimit: false }` — see /health below.
+    //
+    // Disabled by default when NODE_ENV === 'test' (set automatically by Jest — verified: a plain
+    // `npx jest` run has it set with no config needed). Most existing test files build ONE app
+    // instance in `beforeAll` and then fire many requests against it across all their `it()` blocks
+    // — all within the same 1-minute window this limiter tracks. At the real 100/min default,
+    // several of the larger suites (e.g. tests/api/purse/load.test.ts's 14 tests, each making
+    // several requests) would trip it well before finishing, failing for a reason unrelated to what
+    // they're actually testing. tests/api/rateLimit/routes.test.ts passes `forceRateLimit: true` to
+    // build a dedicated app instance with the real limiter active, so the feature itself is still
+    // verified end-to-end against its real default rather than a stand-in number.
+    if (options.forceRateLimit || process.env.NODE_ENV !== 'test') {
+        app.register(rate_limit_1.default, { max: 100, timeWindow: '1 minute' });
+    }
+    // Exempted from the global rate limit: a monitoring/uptime check hitting this on a schedule
+    // shouldn't be able to trip the same counter real API traffic shares, and it does nothing
+    // expensive worth guarding.
+    app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }));
+    // All route files declare paths exactly as they appear in docs/api-contract.md (e.g.
+    // `/limit/recommendation`, not nested under `/purse`), so every plugin shares the same
+    // `/api/v1` prefix rather than a per-domain one.
+    app.register(routes_1.default, { prefix: '/api/v1' });
+    app.register(routes_2.default, { prefix: '/api/v1' });
+    app.register(routes_3.default, { prefix: '/api/v1' });
+    app.register(routes_4.default, { prefix: '/api/v1' });
+    app.register(routes_5.default, { prefix: '/api/v1' });
+    app.register(routes_6.default, { prefix: '/api/v1' });
+    app.register(routes_7.default, { prefix: '/api/v1' });
+    app.register(routes_8.default, { prefix: '/api/v1' });
+    app.register(routes_9.default, { prefix: '/api/v1' });
+    return app;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,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LENBQUM7QUFDYixDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkQ6XFxzYW1pa3NoYS13b3JrXFxTUEFSS1xcYmFja2VuZFxcc3JjXFxzZXJ2ZXIudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IEZhc3RpZnksIHsgRmFzdGlmeUluc3RhbmNlIH0gZnJvbSAnZmFzdGlmeSc7XHJcbmltcG9ydCByYXRlTGltaXQgZnJvbSAnQGZhc3RpZnkvcmF0ZS1saW1pdCc7XHJcbmltcG9ydCBlbnJvbGxSb3V0ZXMgZnJvbSAnLi9hcGkvZW5yb2xsL3JvdXRlcyc7XHJcbmltcG9ydCBhdXRoUm91dGVzIGZyb20gJy4vYXBpL2F1dGgvcm91dGVzJztcclxuaW1wb3J0IHB1cnNlUm91dGVzIGZyb20gJy4vYXBpL3B1cnNlL3JvdXRlcyc7XHJcbmltcG9ydCBzeW5jUm91dGVzIGZyb20gJy4vYXBpL3N5bmMvcm91dGVzJztcclxuaW1wb3J0IHRydXN0Um91dGVzIGZyb20gJy4vYXBpL3RydXN0L3JvdXRlcyc7XHJcbmltcG9ydCBhZG1pblJvdXRlcyBmcm9tICcuL2FwaS9hZG1pbi9yb3V0ZXMnO1xyXG5pbXBvcnQgZXNjcm93Um91dGVzIGZyb20gJy4vYXBpL2VzY3Jvdy9yb3V0ZXMnO1xyXG5pbXBvcnQgZmFtaWx5Um91dGVzIGZyb20gJy4vYXBpL2ZhbWlseS9yb3V0ZXMnO1xyXG5pbXBvcnQgc21zUm91dGVzIGZyb20gJy4vYXBpL3Ntcy9yb3V0ZXMnO1xyXG5cclxuZXhwb3J0IGludGVyZmFjZSBCdWlsZFNlcnZlck9wdGlvbnMge1xyXG4gIC8qKlxyXG4gICAqIEZvcmNlcyB0aGUgcmF0ZSBsaW1pdGVyIG9uIGV2ZW4gd2hlbiBOT0RFX0VOViA9PT0gJ3Rlc3QnIOKAlCBzZWUgdGhlIGNvbW1lbnQgb24gdGhlXHJcbiAgICogQGZhc3RpZnkvcmF0ZS1saW1pdCByZWdpc3RyYXRpb24gYmVsb3cgZm9yIHdoeSB0ZXN0cyBhcmUgZXhlbXB0IGJ5IGRlZmF1bHQuIE9ubHlcclxuICAgKiB0ZXN0cy9hcGkvcmF0ZUxpbWl0L3JvdXRlcy50ZXN0LnRzLCB3aGljaCBleGlzdHMgc3BlY2lmaWNhbGx5IHRvIGV4ZXJjaXNlIHRoZSByZWFsIGxpbWl0LFxyXG4gICAqIHNob3VsZCBuZWVkIHRoaXMuXHJcbiAgICovXHJcbiAgZm9yY2VSYXRlTGltaXQ/OiBib29sZWFuO1xyXG59XHJcblxyXG5leHBvcnQgZnVuY3Rpb24gYnVpbGRTZXJ2ZXIob3B0aW9uczogQnVpbGRTZXJ2ZXJPcHRpb25zID0ge30pOiBGYXN0aWZ5SW5zdGFuY2Uge1xyXG4gIC8vIEZhc3RpZnkncyBkZWZhdWx0IEFKViBjb25maWcgc2V0cyBgcmVtb3ZlQWRkaXRpb25hbDogdHJ1ZWAsIHdoaWNoICpzaWxlbnRseSBzdHJpcHMqIGZpZWxkc1xyXG4gIC8vIG5vdCBsaXN0ZWQgaW4gYSByb3V0ZSBzY2hlbWEgaW5zdGVhZCBvZiByZWplY3RpbmcgdGhlIHJlcXVlc3QuIFRoYXQncyBsb29zZXIgdGhhbiB3aGF0XHJcbiAgLy8gZG9jcy9hcGktY29udHJhY3QubWQgc3BlY2lmaWVzIChgYWRkaXRpb25hbFByb3BlcnRpZXM6IGZhbHNlYCBvbiBldmVyeSByZXF1ZXN0IGJvZHkpIOKAlFxyXG4gIC8vIG92ZXJyaWRlIGl0IHNvIGFuIHVuZXhwZWN0ZWQgZmllbGQgaXMgYSBoYXJkIDQwMCwgbWF0Y2hpbmcgdGhlIGNvbnRyYWN0LlxyXG4gIGNvbnN0IGFwcCA9IEZhc3RpZnkoe1xyXG4gICAgbG9nZ2VyOiB0cnVlLFxyXG4gICAgYWp2OiB7IGN1c3RvbU9wdGlvbnM6IHsgcmVtb3ZlQWRkaXRpb25hbDogZmFsc2UgfSB9LFxyXG4gIH0pO1xyXG5cclxuICAvLyBIQUNLQVRIT04tU0NPUEUsIE5PVCBQUk9EVUNUSU9OLUdSQURFOiBhIGZsYXQsIGluLW1lbW9yeSwgcGVyLXByb2Nlc3MsIHBlci1JUCBsaW1pdGVyLiBJdCdzXHJcbiAgLy8gZGVmZW5zZSBhZ2FpbnN0IGFjY2lkZW50YWwgaGFtbWVyaW5nIGR1cmluZyB0ZXN0aW5nL2RlbW8gKGUuZy4gYSBidWdneSBjbGllbnQgcmV0cnkgbG9vcFxyXG4gIC8vIHBvaW50ZWQgYXQgdGhpcyBzZXJ2ZXIpLCBub3QgYSByZWFsIGFudGktYWJ1c2Ugc3lzdGVtIOKAlCBubyBkaXN0cmlidXRlZCBzdG9yZSAoYSBzZWNvbmRcclxuICAvLyBpbnN0YW5jZSBiZWhpbmQgYSBsb2FkIGJhbGFuY2VyIHdvdWxkIHRyYWNrIGl0cyBvd24gc2VwYXJhdGUgY291bnRzKSwgbm8gcGVyLXJvdXRlIHR1bmluZyxcclxuICAvLyBhbmQgdHJpdmlhbGx5IGJ5cGFzc2VkIGJ5IHJvdGF0aW5nIHNvdXJjZSBJUC4gQSBwcm9kdWN0aW9uIGRlcGxveW1lbnQgd291bGQgd2FudCBhIHNoYXJlZFxyXG4gIC8vIHN0b3JlIChSZWRpcywgdmlhIHRoZSBwbHVnaW4ncyBgc3RvcmVgIG9wdGlvbiksIHRpZ2h0ZXIgcGVyLWVuZHBvaW50IGxpbWl0cyBvblxyXG4gIC8vIHNlbnNpdGl2ZS9leHBlbnNpdmUgcm91dGVzIChhdXRoLCBzeW5jL3RyYW5zYWN0aW9ucyksIGFuZCByZWFsIGFidXNlIGRldGVjdGlvbiDigJQgb3V0IG9mIHNjb3BlXHJcbiAgLy8gaGVyZS5cclxuICAvL1xyXG4gIC8vIFJlZ2lzdGVyZWQgYmVmb3JlIGV2ZXJ5IHJvdXRlIHNvIHRoZSBnbG9iYWwgZGVmYXVsdCAoYGdsb2JhbDogdHJ1ZWAgaXMgdGhpcyBwbHVnaW4nc1xyXG4gIC8vIGRlZmF1bHQpIGFwcGxpZXMgZXZlcnl3aGVyZSBleGNlcHQgd2hlcmUgYSByb3V0ZSBleHBsaWNpdGx5IG9wdHMgb3V0IHZpYVxyXG4gIC8vIGBjb25maWc6IHsgcmF0ZUxpbWl0OiBmYWxzZSB9YCDigJQgc2VlIC9oZWFsdGggYmVsb3cuXHJcbiAgLy9cclxuICAvLyBEaXNhYmxlZCBieSBkZWZhdWx0IHdoZW4gTk9ERV9FTlYgPT09ICd0ZXN0JyAoc2V0IGF1dG9tYXRpY2FsbHkgYnkgSmVzdCDigJQgdmVyaWZpZWQ6IGEgcGxhaW5cclxuICAvLyBgbnB4IGplc3RgIHJ1biBoYXMgaXQgc2V0IHdpdGggbm8gY29uZmlnIG5lZWRlZCkuIE1vc3QgZXhpc3RpbmcgdGVzdCBmaWxlcyBidWlsZCBPTkUgYXBwXHJcbiAgLy8gaW5zdGFuY2UgaW4gYGJlZm9yZUFsbGAgYW5kIHRoZW4gZmlyZSBtYW55IHJlcXVlc3RzIGFnYWluc3QgaXQgYWNyb3NzIGFsbCB0aGVpciBgaXQoKWAgYmxvY2tzXHJcbiAgLy8g4oCUIGFsbCB3aXRoaW4gdGhlIHNhbWUgMS1taW51dGUgd2luZG93IHRoaXMgbGltaXRlciB0cmFja3MuIEF0IHRoZSByZWFsIDEwMC9taW4gZGVmYXVsdCxcclxuICAvLyBzZXZlcmFsIG9mIHRoZSBsYXJnZXIgc3VpdGVzIChlLmcuIHRlc3RzL2FwaS9wdXJzZS9sb2FkLnRlc3QudHMncyAxNCB0ZXN0cywgZWFjaCBtYWtpbmdcclxuICAvLyBzZXZlcmFsIHJlcXVlc3RzKSB3b3VsZCB0cmlwIGl0IHdlbGwgYmVmb3JlIGZpbmlzaGluZywgZmFpbGluZyBmb3IgYSByZWFzb24gdW5yZWxhdGVkIHRvIHdoYXRcclxuICAvLyB0aGV5J3JlIGFjdHVhbGx5IHRlc3RpbmcuIHRlc3RzL2FwaS9yYXRlTGltaXQvcm91dGVzLnRlc3QudHMgcGFzc2VzIGBmb3JjZVJhdGVMaW1pdDogdHJ1ZWAgdG9cclxuICAvLyBidWlsZCBhIGRlZGljYXRlZCBhcHAgaW5zdGFuY2Ugd2l0aCB0aGUgcmVhbCBsaW1pdGVyIGFjdGl2ZSwgc28gdGhlIGZlYXR1cmUgaXRzZWxmIGlzIHN0aWxsXHJcbiAgLy8gdmVyaWZpZWQgZW5kLXRvLWVuZCBhZ2FpbnN0IGl0cyByZWFsIGRlZmF1bHQgcmF0aGVyIHRoYW4gYSBzdGFuZC1pbiBudW1iZXIuXHJcbiAgaWYgKG9wdGlvbnMuZm9yY2VSYXRlTGltaXQgfHwgcHJvY2Vzcy5lbnYuTk9ERV9FTlYgIT09ICd0ZXN0Jykge1xyXG4gICAgYXBwLnJlZ2lzdGVyKHJhdGVMaW1pdCwgeyBtYXg6IDEwMCwgdGltZVdpbmRvdzogJzEgbWludXRlJyB9KTtcclxuICB9XHJcblxyXG4gIC8vIEV4ZW1wdGVkIGZyb20gdGhlIGdsb2JhbCByYXRlIGxpbWl0OiBhIG1vbml0b3JpbmcvdXB0aW1lIGNoZWNrIGhpdHRpbmcgdGhpcyBvbiBhIHNjaGVkdWxlXHJcbiAgLy8gc2hvdWxkbid0IGJlIGFibGUgdG8gdHJpcCB0aGUgc2FtZSBjb3VudGVyIHJlYWwgQVBJIHRyYWZmaWMgc2hhcmVzLCBhbmQgaXQgZG9lcyBub3RoaW5nXHJcbiAgLy8gZXhwZW5zaXZlIHdvcnRoIGd1YXJkaW5nLlxyXG4gIGFwcC5nZXQoJy9oZWFsdGgnLCB7IGNvbmZpZzogeyByYXRlTGltaXQ6IGZhbHNlIH0gfSwgYXN5bmMgKCkgPT4gKHsgc3RhdHVzOiAnb2snIH0pKTtcclxuXHJcbiAgLy8gQWxsIHJvdXRlIGZpbGVzIGRlY2xhcmUgcGF0aHMgZXhhY3RseSBhcyB0aGV5IGFwcGVhciBpbiBkb2NzL2FwaS1jb250cmFjdC5tZCAoZS5nLlxyXG4gIC8vIGAvbGltaXQvcmVjb21tZW5kYXRpb25gLCBub3QgbmVzdGVkIHVuZGVyIGAvcHVyc2VgKSwgc28gZXZlcnkgcGx1Z2luIHNoYXJlcyB0aGUgc2FtZVxyXG4gIC8vIGAvYXBpL3YxYCBwcmVmaXggcmF0aGVyIHRoYW4gYSBwZXItZG9tYWluIG9uZS5cclxuICBhcHAucmVnaXN0ZXIoZW5yb2xsUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3RlcihhdXRoUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3RlcihwdXJzZVJvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIoc3luY1JvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIodHJ1c3RSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGFkbWluUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG4gIGFwcC5yZWdpc3Rlcihlc2Nyb3dSb3V0ZXMsIHsgcHJlZml4OiAnL2FwaS92MScgfSk7XHJcbiAgYXBwLnJlZ2lzdGVyKGZhbWlseVJvdXRlcywgeyBwcmVmaXg6ICcvYXBpL3YxJyB9KTtcclxuICBhcHAucmVnaXN0ZXIoc21zUm91dGVzLCB7IHByZWZpeDogJy9hcGkvdjEnIH0pO1xyXG5cclxuICByZXR1cm4gYXBwO1xyXG59XHJcbiJdLCJ2ZXJzaW9uIjozfQ==

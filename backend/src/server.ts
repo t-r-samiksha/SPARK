@@ -8,6 +8,7 @@ import trustRoutes from './api/trust/routes';
 import adminRoutes from './api/admin/routes';
 import escrowRoutes from './api/escrow/routes';
 import familyRoutes from './api/family/routes';
+import smsRoutes from './api/sms/routes';
 
 export interface BuildServerOptions {
   /**
@@ -71,6 +72,7 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   app.register(adminRoutes, { prefix: '/api/v1' });
   app.register(escrowRoutes, { prefix: '/api/v1' });
   app.register(familyRoutes, { prefix: '/api/v1' });
+  app.register(smsRoutes, { prefix: '/api/v1' });
 
   return app;
 }
