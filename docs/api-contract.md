@@ -22,7 +22,7 @@ admin endpoints).
 | POST | `/api/v1/enroll` | `{account_id, public_key, attestation_blob}` | device cert |
 | POST | `/api/v1/auth/challenge` | `{device_id}` | `{nonce}` |
 | POST | `/api/v1/auth/verify` | `{device_id, signed_nonce}` | `{session_token}` |
-| POST | `/api/v1/purse/load` | device requests purse | `{purse_token}` |
+| POST | `/api/v1/purse/load` | `{value}` — debited from account real_balance | `{purse_token}` |
 | POST | `/api/v1/purse/topup` | refill existing purse | `{purse_token}` |
 | GET | `/api/v1/purse/status` | — | `{remaining, cap, expiry}` |
 | POST | `/api/v1/sync/transactions` | batch of signed txs | per-tx results |
@@ -183,14 +183,25 @@ paths:
   /purse/load:
     post:
       summary: Request a new purse token
+      description: >
+        Decided: value is a transfer from the account's real_balance to the offline purse, debited
+        atomically on issuance — not a live external bank check.
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
               type: object
               additionalProperties: false
-              properties: {}
+              required: [value]
+              properties:
+                value:
+                  type: string
+                  pattern: "^[0-9]+$"
+                  description: >
+                    Integer paise to load into the purse, as a decimal string. Debited from the
+                    account's real_balance; rejected if it exceeds either the recommended cap or
+                    the account's available real_balance.
       responses:
         "200":
           description: Purse token issued

@@ -19,7 +19,16 @@ datasource db {
 model Account {
   id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
-  devices   Device[]
+  // Simulates the bank's real, live account balance backing this SPARK account, in integer
+  // paise. POST /purse/load debits this to fund an offline purse — see the comment at that route
+  // for why this is a native BigInt (not the decimal-string convention used for signed wire
+  // fields): this value is never signed or canonically serialized, only compared/decremented
+  // server-side, so the cross-language JSON round-trip concern that motivates decimal strings
+  // elsewhere doesn't apply here. Nothing currently credits this field except src/db/seed.ts's
+  // demo data — real bank-account integration (deposits, external balance checks) is out of
+  // scope per the project spec.
+  realBalance BigInt   @default(0) @map("real_balance")
+  devices     Device[]
 
   @@map("accounts")
 }
