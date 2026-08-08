@@ -32,3 +32,9 @@ export function bankSigningKeySeed(): string {
 export function bankRootCaPublicKey(): string {
   return publicKeyFromSeed(bankRootCaKeySeed());
 }
+
+/** Shared secret for the admin endpoints (X-Admin-Key header) — see requireAdminKey.ts. A bare
+ * shared secret, not a real admin auth system; see that file for why. */
+export function adminApiKey(): string {
+  return requireEnv('ADMIN_API_KEY');
+}

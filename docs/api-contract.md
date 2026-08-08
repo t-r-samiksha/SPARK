@@ -37,7 +37,7 @@ admin endpoints).
 |---|---|---|---|
 | GET | `/api/v1/admin/incidents?type=double_spend\|fraud_flag\|all` | — | incidents list (replaces the old separate `/admin/fraud`) |
 | POST | `/api/v1/admin/revoke` | revoke a device cert | revocation result |
-| POST | `/api/v1/admin/disaster/toggle` | enable/disable by region | toggle result |
+| POST | `/api/v1/admin/disaster/toggle` | `{region_geo, type, enabled, higher_cap?, essential_only?}` | toggle result |
 
 ## Authentication
 
@@ -527,7 +527,11 @@ paths:
       summary: List operational incidents, optionally filtered by type
       description: >
         Decided: this endpoint replaces the separate /admin/fraud endpoint. Fraud cases are
-        incidents with type=fraud_flag, not a distinct resource.
+        incidents with type=fraud_flag, not a distinct resource. double_spend shape resolved
+        below, matching the DoubleSpendIncident model (src/settlement/doubleSpendResolver.ts) and
+        reusing the same field names POST /sync/transactions already returns incidents with, so
+        one incident looks the same everywhere it's surfaced. fraud_flag currently always returns
+        an empty array — no fraud-detection logic exists yet (Member C's fraud intelligence).
       parameters:
         - name: type
           in: query
@@ -549,17 +553,51 @@ paths:
                   incidents:
                     type: array
                     items:
-                      type: object
-                      required: [type]
-                      description: Shape TBD beyond the type discriminator.
-                      properties:
-                        type:
-                          type: string
-                          enum: [double_spend, fraud_flag]
+                      oneOf:
+                        - type: object
+                          required: [type, id, token_id, device_id, tx_id_a, tx_id_b, detected_at]
+                          properties:
+                            type:
+                              type: string
+                              enum: [double_spend]
+                            id:
+                              type: string
+                              format: uuid
+                            token_id:
+                              type: string
+                              format: uuid
+                            device_id:
+                              type: string
+                              format: uuid
+                            tx_id_a:
+                              type: string
+                              format: uuid
+                            tx_id_b:
+                              type: string
+                              format: uuid
+                            detected_at:
+                              type: integer
+                              description: Unix epoch seconds.
+                        - type: object
+                          description: >
+                            Placeholder — shape TBD once fraud-detection logic exists. No
+                            fraud_flag incidents are produced today.
+                          required: [type]
+                          properties:
+                            type:
+                              type: string
+                              enum: [fraud_flag]
 
   /admin/revoke:
     post:
       summary: Revoke a device certificate
+      description: >
+        Decided: keyed by device_id, not serial_number — an admin revoking a lost/stolen device
+        has the device_id on hand (support ticket, account lookup), not necessarily its current
+        cert serial; the backend resolves that internally via the Device row. Reuses the same
+        revokeCertificate() helper the double-spend flow uses
+        (src/settlement/doubleSpendResolver.ts), so RevokedCertificate and
+        Device.revokedAt/revokedReason stay in sync via one code path either way.
       requestBody:
         required: true
         content:
@@ -567,14 +605,11 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [serial_number, reason]
+              required: [device_id, reason]
               properties:
-                serial_number:
-                  type: string
                 device_id:
                   type: string
                   format: uuid
-                  description: Optional convenience lookup if serial_number isn't on hand.
                 reason:
                   type: string
       responses:
@@ -584,9 +619,14 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [serial_number, revoked_at]
+                required: [device_id, serial_number, reason, revoked_at]
                 properties:
+                  device_id:
+                    type: string
+                    format: uuid
                   serial_number:
+                    type: string
+                  reason:
                     type: string
                   revoked_at:
                     type: integer
@@ -594,7 +634,14 @@ paths:
 
   /admin/disaster/toggle:
     post:
-      summary: Enable or disable service for a region (disaster mode)
+      summary: Enable or disable disaster mode for a region
+      description: >
+        Decided: request/response fields match the DisasterEvent model actually implemented
+        (GET /sync/updates consumes the same table) — {region, enabled} was the original
+        kickoff-inferred shape and is stale; DisasterEvent has more fields than a bare on/off
+        toggle. Toggle-off identifies which event to end by region_geo (the currently-active
+        DisasterEvent for that region), not a client-supplied event id. Response now includes
+        `id`, since the dashboard needs one to reference this specific event later.
       requestBody:
         required: true
         content:
@@ -602,12 +649,24 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [region, enabled]
+              required: [region_geo, type, enabled]
               properties:
-                region:
+                region_geo:
                   type: string
+                  description: Which region this event applies to (freeform region name/code for now).
+                type:
+                  type: string
+                  description: Disaster category, e.g. "flood", "earthquake", "network_outage" (freeform, no enum decided).
                 enabled:
                   type: boolean
+                  description: Turns disaster mode on/off for this region (maps to DisasterEvent.active).
+                higher_cap:
+                  type: [string, "null"]
+                  pattern: "^[0-9]+$"
+                  description: Optional elevated offline spend cap (decimal paise) to apply while this event is active.
+                essential_only:
+                  type: boolean
+                  description: Optional — restrict offline spend to essential purchases only while this event is active.
       responses:
         "200":
           description: Toggled
@@ -615,11 +674,21 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [region, enabled, updated_at]
+                required: [id, region_geo, type, enabled, updated_at]
                 properties:
-                  region:
+                  id:
+                    type: string
+                    format: uuid
+                    description: The DisasterEvent's id — for the dashboard to reference this event later.
+                  region_geo:
+                    type: string
+                  type:
                     type: string
                   enabled:
+                    type: boolean
+                  higher_cap:
+                    type: [string, "null"]
+                  essential_only:
                     type: boolean
                   updated_at:
                     type: integer
