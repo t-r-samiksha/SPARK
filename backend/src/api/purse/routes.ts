@@ -3,6 +3,7 @@ import { prisma } from '../../db/client';
 import { requireSession } from '../auth/requireSession';
 import { getRecommendedCap } from './limitStub';
 import { issuePurseToken } from './issuePurseToken';
+import { getActiveDisasterEvent } from '../../settlement/disasterContext';
 
 // Integer paise as a decimal string, per docs/id-conventions.md#amounts.
 const DECIMAL_PAISE_PATTERN = /^[0-9]+$/;
@@ -53,7 +54,20 @@ export default async function purseRoutes(fastify: FastifyInstance): Promise<voi
       // docs/purse-token-format.md#value-vs-cap ("cap is... the maximum the backend is willing to
       // authorize this device to hold offline"), distinct from the open question above about
       // where the value number itself is sourced from.
-      const cap = getRecommendedCap();
+      const normalCap = getRecommendedCap();
+
+      // Phase 9 (disaster-mode enforcement): if a disaster is active and has a higher_cap set,
+      // devices may hold more than the normal recommended cap while it's in effect — the whole
+      // point of higher_cap is to relax offline spend limits during a disaster. See
+      // disasterContext.ts for the "any active event applies globally" simplification (no
+      // device-location data exists yet to match region_geo against). No active disaster, or one
+      // with no higher_cap set, falls back to the normal cap unchanged.
+      const activeDisaster = await getActiveDisasterEvent();
+      const cap =
+        activeDisaster?.higherCap && BigInt(activeDisaster.higherCap) > BigInt(normalCap)
+          ? activeDisaster.higherCap
+          : normalCap;
+
       const requestedValue = BigInt(value);
       if (requestedValue > BigInt(cap)) {
         return reply.code(400).send({ error: `value (${value}) exceeds the recommended cap (${cap})` });

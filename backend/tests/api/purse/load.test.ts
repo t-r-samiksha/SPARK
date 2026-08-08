@@ -12,6 +12,7 @@ jest.mock('../../../src/db/client', () => {
   const devicesByPublicKey = new Map<string, Record<string, unknown>>();
   const accounts = new Map<string, { id: string; realBalance: bigint }>();
   const purseTokens: Array<Record<string, unknown> & { deviceId: string; createdAt: Date }> = [];
+  const disasterEvents: Array<Record<string, unknown> & { id: string; regionGeo: string; active: boolean; startedAt: Date }> = [];
 
   const client = {
     account: {
@@ -76,6 +77,42 @@ jest.mock('../../../src/db/client', () => {
         return record;
       },
     },
+    disasterEvent: {
+      // Handles both query shapes used across the codebase: disasterContext.ts's
+      // `{where:{active}, orderBy:{startedAt:'desc'}}` (no region filter — "any active event
+      // applies globally", per that file's documented simplification) and
+      // admin/routes.ts's `{where:{regionGeo, active}}` (looking up a specific region's event).
+      findFirst: async ({ where }: { where: { regionGeo?: string; active?: boolean } }) => {
+        const matches = disasterEvents
+          .filter(
+            (e) =>
+              (where.regionGeo === undefined || e.regionGeo === where.regionGeo) &&
+              (where.active === undefined || e.active === where.active),
+          )
+          .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+        return matches[0] ?? null;
+      },
+      create: async ({ data }: { data: Record<string, unknown> & { regionGeo: string; active: boolean } }) => {
+        const record = {
+          id: randomUUID(),
+          essentialOnly: false,
+          higherCap: null,
+          startedAt: new Date(),
+          endedAt: null,
+          ...data,
+        };
+        disasterEvents.push(record);
+        return record;
+      },
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const event = disasterEvents.find((e) => e.id === where.id);
+        if (!event) {
+          throw new Error(`disaster event not found in fake store: ${where.id}`);
+        }
+        Object.assign(event, data);
+        return event;
+      },
+    },
     // `tx` is typed `any` rather than `typeof client` to avoid a circular type reference (client
     // referencing its own type within its own initializer) — acceptable in test-only mock code.
     $transaction: async <T>(fn: (tx: any) => Promise<T>): Promise<T> => fn(client),
@@ -117,6 +154,8 @@ const { __setAccountBalance, __getAccountBalance } = jest.requireMock('../../../
   __getAccountBalance: (accountId: string) => bigint | undefined;
 };
 
+const ADMIN_KEY = 'test-admin-key-purse-load';
+
 let app: FastifyInstance;
 let operationalPublicKey: string;
 
@@ -125,6 +164,7 @@ beforeAll(async () => {
   const operationalKeyPair = generateEd25519KeyPair();
   process.env.BANK_SIGNING_KEY_SEED = operationalKeyPair.privateSeed;
   operationalPublicKey = operationalKeyPair.publicKey;
+  process.env.ADMIN_API_KEY = ADMIN_KEY;
 
   app = buildServer();
   await app.ready();
@@ -194,6 +234,15 @@ async function loadPurse(sessionToken: string | undefined, body: Record<string, 
     payload: body,
   });
   return response;
+}
+
+async function toggleDisaster(body: Record<string, unknown>) {
+  return app.inject({
+    method: 'POST',
+    url: '/api/v1/admin/disaster/toggle',
+    headers: { 'x-admin-key': ADMIN_KEY },
+    payload: body,
+  });
 }
 
 describe('POST /api/v1/purse/load', () => {
@@ -306,6 +355,94 @@ describe('POST /api/v1/purse/load', () => {
       const second = await loadPurse(sessionToken, { value: '20000' });
       expect(second.statusCode).toBe(200);
       expect(__getAccountBalance(device.accountId)).toBe(50_000n);
+    });
+  });
+
+  describe('disaster-mode cap enforcement (Phase 9)', () => {
+    it('uses the normal cap when there is no active disaster', async () => {
+      const device = await enrollDevice();
+      const sessionToken = await getSessionToken(device);
+
+      const response = await loadPurse(sessionToken, { value: '150000' });
+      expect(response.statusCode).toBe(200);
+      const json = JSON.parse(
+        pemDecode(PURSE_TOKEN_PEM_LABEL, response.json().purse_token).toString('utf8'),
+      ) as PurseToken;
+      expect(json.cap).toBe('200000');
+    });
+
+    it('uses the disaster higher_cap when an active disaster has one set', async () => {
+      const region = `region-${randomUUID()}`;
+      const toggleOn = await toggleDisaster({
+        region_geo: region,
+        type: 'flood',
+        enabled: true,
+        higher_cap: '500000',
+      });
+      expect(toggleOn.statusCode).toBe(200);
+
+      const device = await enrollDevice();
+      const sessionToken = await getSessionToken(device);
+
+      // 300000 exceeds the normal cap (200000) but is within the disaster higher_cap (500000) —
+      // only passes if the higher cap is actually being applied, not just the normal one.
+      const response = await loadPurse(sessionToken, { value: '300000' });
+      expect(response.statusCode).toBe(200);
+      const json = JSON.parse(
+        pemDecode(PURSE_TOKEN_PEM_LABEL, response.json().purse_token).toString('utf8'),
+      ) as PurseToken;
+      expect(json.cap).toBe('500000');
+    });
+
+    it('falls back to the normal cap when an active disaster has no higher_cap set', async () => {
+      const region = `region-${randomUUID()}`;
+      const toggleOn = await toggleDisaster({ region_geo: region, type: 'network_outage', enabled: true });
+      expect(toggleOn.statusCode).toBe(200);
+      expect(toggleOn.json().higher_cap).toBeNull();
+
+      const device = await enrollDevice();
+      const sessionToken = await getSessionToken(device);
+
+      const overNormalCap = await loadPurse(sessionToken, { value: '300000' });
+      expect(overNormalCap.statusCode).toBe(400);
+
+      const withinNormalCap = await loadPurse(sessionToken, { value: '150000' });
+      expect(withinNormalCap.statusCode).toBe(200);
+      const json = JSON.parse(
+        pemDecode(PURSE_TOKEN_PEM_LABEL, withinNormalCap.json().purse_token).toString('utf8'),
+      ) as PurseToken;
+      expect(json.cap).toBe('200000');
+    });
+
+    it('reverts to the normal cap once the disaster is toggled off', async () => {
+      const region = `region-${randomUUID()}`;
+      const toggleOn = await toggleDisaster({
+        region_geo: region,
+        type: 'flood',
+        enabled: true,
+        higher_cap: '500000',
+      });
+      expect(toggleOn.statusCode).toBe(200);
+
+      const device = await enrollDevice();
+      const sessionToken = await getSessionToken(device);
+
+      const duringDisaster = await loadPurse(sessionToken, { value: '300000' });
+      expect(duringDisaster.statusCode).toBe(200);
+
+      const toggleOff = await toggleDisaster({ region_geo: region, type: 'flood', enabled: false });
+      expect(toggleOff.statusCode).toBe(200);
+      expect(toggleOff.json().enabled).toBe(false);
+
+      const afterToggleOff = await loadPurse(sessionToken, { value: '300000' });
+      expect(afterToggleOff.statusCode).toBe(400); // back to the normal cap, 300000 exceeds it
+
+      const withinNormalCap = await loadPurse(sessionToken, { value: '150000' });
+      expect(withinNormalCap.statusCode).toBe(200);
+      const json = JSON.parse(
+        pemDecode(PURSE_TOKEN_PEM_LABEL, withinNormalCap.json().purse_token).toString('utf8'),
+      ) as PurseToken;
+      expect(json.cap).toBe('200000');
     });
   });
 });

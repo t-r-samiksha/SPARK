@@ -181,6 +181,14 @@ export async function settleTransactionBatch(transactions: Transaction[]): Promi
       continue;
     }
 
+    // TODO (Phase 9, disaster-mode essential_only — deliberately NOT implemented): if an active
+    // DisasterEvent has essential_only=true (see disasterContext.ts), transactions during it are
+    // meant to be restricted to "essential" purchases only. This can't be enforced here: nothing
+    // in the schema classifies a transaction, a payee, or a merchant account as
+    // essential/non-essential — that needs Member C's merchant categorization first. Faking this
+    // check (e.g. accepting everything, or rejecting everything) would be worse than leaving it
+    // absent, so this is intentionally a no-op rather than a guess.
+
     candidates.push({ transaction: tx, payerCert: certCheck.cert });
     candidateIndex.set(tx.tx_id, i);
     candidateToken.set(tx.token_id, {

@@ -14,6 +14,7 @@ jest.mock('../../../src/db/client', () => {
   const incidents: Array<Record<string, unknown>> = [];
   const transactionsById = new Map<string, Record<string, unknown> & { tokenId: string; deviceCounter: number }>();
   const trustEdgesById = new Map<string, Record<string, unknown> & { id: string; subjectA: string; subjectB: string }>();
+  const disasterEvents: Array<Record<string, unknown> & { id: string; regionGeo: string; active: boolean; startedAt: Date }> = [];
 
   const client = {
     account: {
@@ -150,6 +151,42 @@ jest.mock('../../../src/db/client', () => {
         const record = { id: randomUUID(), detectedAt: new Date(), ...data };
         incidents.push(record);
         return record;
+      },
+    },
+    // Needed since Phase 9: POST /purse/load (used by this file's loadPurseToken() helper) now
+    // unconditionally calls getActiveDisasterEvent(), which queries this model — without it every
+    // /purse/load call in this file would 500. This file doesn't test disaster-mode behavior
+    // itself (see tests/api/purse/load.test.ts for that); it just needs the mock not to crash.
+    disasterEvent: {
+      findFirst: async ({ where }: { where: { regionGeo?: string; active?: boolean } }) => {
+        const matches = disasterEvents
+          .filter(
+            (e) =>
+              (where.regionGeo === undefined || e.regionGeo === where.regionGeo) &&
+              (where.active === undefined || e.active === where.active),
+          )
+          .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+        return matches[0] ?? null;
+      },
+      create: async ({ data }: { data: Record<string, unknown> & { regionGeo: string; active: boolean } }) => {
+        const record = {
+          id: randomUUID(),
+          essentialOnly: false,
+          higherCap: null,
+          startedAt: new Date(),
+          endedAt: null,
+          ...data,
+        };
+        disasterEvents.push(record);
+        return record;
+      },
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const event = disasterEvents.find((e) => e.id === where.id);
+        if (!event) {
+          throw new Error(`disaster event not found in fake store: ${where.id}`);
+        }
+        Object.assign(event, data);
+        return event;
       },
     },
     trustAttestation: {
