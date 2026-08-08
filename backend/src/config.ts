@@ -33,6 +33,12 @@ export function bankRootCaPublicKey(): string {
   return publicKeyFromSeed(bankRootCaKeySeed());
 }
 
+/** Same rationale as bankRootCaPublicKey() above, for the operational key (purse tokens, trust
+ * attestations). */
+export function bankSigningPublicKey(): string {
+  return publicKeyFromSeed(bankSigningKeySeed());
+}
+
 /** Shared secret for the admin endpoints (X-Admin-Key header) — see requireAdminKey.ts. A bare
  * shared secret, not a real admin auth system; see that file for why. */
 export function adminApiKey(): string {
