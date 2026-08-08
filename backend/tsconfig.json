@@ -1,3 +1,9 @@
+// Dev/type-check config: covers src/ + tests/, used by `npm run lint` (tsc --noEmit) and by
+// ts-jest (which reads compilerOptions from here, independent of `include`/`exclude`). NOT used
+// for the production build/emit — that's tsconfig.build.json, which narrows `include` to src/
+// only and sets rootDir to "src" so `tsc` emits dist/index.js directly instead of dist/src/
+// index.js. If rootDir/include change here, check whether tsconfig.build.json needs the same
+// update (it extends this file, so most changes propagate automatically).
 {
   "compilerOptions": {
     "target": "ES2022",
