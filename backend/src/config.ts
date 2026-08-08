@@ -9,6 +9,8 @@
 // TODO: both are file/env-based for hackathon speed; docs/crypto.md#key-management flags this as
 // needing KMS/HSM-backed storage before anything resembling production.
 
+import { publicKeyFromSeed } from './crypto';
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -23,4 +25,10 @@ export function bankRootCaKeySeed(): string {
 
 export function bankSigningKeySeed(): string {
   return requireEnv('BANK_SIGNING_KEY_SEED');
+}
+
+/** Derived from the seed on every call rather than cached — cheap, and avoids a stale value if
+ * the env var were ever rotated within a process lifetime (not expected, but free to get right). */
+export function bankRootCaPublicKey(): string {
+  return publicKeyFromSeed(bankRootCaKeySeed());
 }

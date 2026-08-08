@@ -85,7 +85,45 @@ model Transaction {
   signature     String
   syncedAt      DateTime @default(now()) @map("synced_at")
 
+  // A genuine double-spend is exactly two DIFFERENT tx_ids claiming the same (token_id,
+  // device_counter) slot — the settlement engine detects and rejects the second one before it
+  // ever reaches persistence, so this is a defensive DB-level backstop (bug/race protection), not
+  // the primary detection mechanism. Also gives O(1) lookup of "is this slot already settled" and
+  // "what's the last settled transaction for this token" (for prev_tx_hash chain continuation).
+  @@unique([tokenId, deviceCounter])
   @@map("transactions")
+}
+
+// Revoked device certificates, keyed by the cert's own serial_number — the same key
+// GET /api/v1/sync/updates distributes as a CRL (see docs/certificate-format.md#revocation).
+// Separate from Device.revokedAt/revokedReason (used by /auth/verify's session check) rather than
+// replacing it: a serial-keyed table is what the CRL concept and POST /api/v1/admin/revoke's
+// {serial_number, reason} shape are built around, and it's the table
+// src/settlement/verifyCertificate.ts checks per-transaction. Revocation (here or via
+// /admin/revoke) should write both — see src/settlement/doubleSpendResolver.ts's
+// revokeCertificate() helper — so the two stay consistent.
+model RevokedCertificate {
+  certSerial String   @id @map("cert_serial")
+  revokedAt  DateTime @default(now()) @map("revoked_at")
+  reason     String
+
+  @@map("revoked_certificates")
+}
+
+// A detected double-spend: two validly-signed transactions from the same device claiming the same
+// (token_id, device_counter) slot. Self-incriminating by construction (both are validly signed by
+// the same device_id), so no additional proof is needed beyond recording it. Not part of any
+// docs/*.md wire format — this is purely an internal admin/audit record, surfaced later via
+// GET /api/v1/admin/incidents (type=double_spend) once that endpoint is implemented.
+model DoubleSpendIncident {
+  id          String   @id @default(uuid()) @db.Uuid
+  tokenId     String   @map("token_id") @db.Uuid
+  deviceId    String   @map("device_id") @db.Uuid
+  txIdA       String   @map("tx_id_a") @db.Uuid
+  txIdB       String   @map("tx_id_b") @db.Uuid
+  detectedAt  DateTime @default(now()) @map("detected_at")
+
+  @@map("double_spend_incidents")
 }
 
 // A trust attestation. Mirrors docs/trust-attestation-format.md.

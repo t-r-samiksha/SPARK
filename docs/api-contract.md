@@ -25,7 +25,7 @@ admin endpoints).
 | POST | `/api/v1/purse/load` | `{value}` — debited from account real_balance | `{purse_token}` |
 | POST | `/api/v1/purse/topup` | refill existing purse | `{purse_token}` |
 | GET | `/api/v1/purse/status` | — | `{remaining, cap, expiry}` |
-| POST | `/api/v1/sync/transactions` | batch of signed txs | per-tx results |
+| POST | `/api/v1/sync/transactions` | batch of signed txs | per-tx results + double-spend incidents |
 | GET | `/api/v1/sync/updates` | — | CRL + flags + trust attestations |
 | GET | `/api/v1/trust/attestations?subject={id}` | — | signed edges |
 | GET | `/api/v1/merchant/{id}/trust` | — | reputation bundle |
@@ -298,13 +298,16 @@ paths:
       responses:
         "200":
           description: >
-            Per-transaction results. Response shape is inferred, not specified in kickoff —
-            confirm at next sync.
+            Decided: adds `incidents` alongside `results` (not in the original kickoff-inferred
+            shape) — a double-spend detected during this batch must not be silently dropped, so
+            it's surfaced directly in the sync response for a future admin endpoint/dashboard to
+            read, not just recorded server-side. See
+            src/settlement/doubleSpendResolver.ts (backend).
           content:
             application/json:
               schema:
                 type: object
-                required: [results]
+                required: [results, incidents]
                 properties:
                   results:
                     type: array
@@ -320,6 +323,31 @@ paths:
                           enum: [accepted, rejected, duplicate]
                         reason:
                           type: string
+                  incidents:
+                    type: array
+                    description: Double-spend incidents detected while settling this batch.
+                    items:
+                      type: object
+                      required: [id, token_id, device_id, tx_id_a, tx_id_b, detected_at]
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        token_id:
+                          type: string
+                          format: uuid
+                        device_id:
+                          type: string
+                          format: uuid
+                        tx_id_a:
+                          type: string
+                          format: uuid
+                        tx_id_b:
+                          type: string
+                          format: uuid
+                        detected_at:
+                          type: integer
+                          description: Unix epoch seconds.
 
   /sync/updates:
     get:
