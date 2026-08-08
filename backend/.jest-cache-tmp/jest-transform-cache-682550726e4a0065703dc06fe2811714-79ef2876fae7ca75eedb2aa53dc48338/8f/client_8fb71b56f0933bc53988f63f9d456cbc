@@ -1,0 +1,9 @@
+9a69caedfd487ca72cca4c2ae421e55a
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.prisma = void 0;
+const client_1 = require("@prisma/client");
+// Single shared PrismaClient instance for the process. See prisma/schema.prisma for the schema
+// and migrations (Prisma requires that directory to live at the project root, not under src/).
+exports.prisma = new client_1.PrismaClient();
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXGRiXFxjbGllbnQudHMiLCJtYXBwaW5ncyI6Ijs7O0FBQUEsMkNBQThDO0FBRTlDLCtGQUErRjtBQUMvRiwrRkFBK0Y7QUFDbEYsUUFBQSxNQUFNLEdBQUcsSUFBSSxxQkFBWSxFQUFFLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiRDpcXHNhbWlrc2hhLXdvcmtcXFNQQVJLXFxiYWNrZW5kXFxzcmNcXGRiXFxjbGllbnQudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgUHJpc21hQ2xpZW50IH0gZnJvbSAnQHByaXNtYS9jbGllbnQnO1xyXG5cclxuLy8gU2luZ2xlIHNoYXJlZCBQcmlzbWFDbGllbnQgaW5zdGFuY2UgZm9yIHRoZSBwcm9jZXNzLiBTZWUgcHJpc21hL3NjaGVtYS5wcmlzbWEgZm9yIHRoZSBzY2hlbWFcclxuLy8gYW5kIG1pZ3JhdGlvbnMgKFByaXNtYSByZXF1aXJlcyB0aGF0IGRpcmVjdG9yeSB0byBsaXZlIGF0IHRoZSBwcm9qZWN0IHJvb3QsIG5vdCB1bmRlciBzcmMvKS5cclxuZXhwb3J0IGNvbnN0IHByaXNtYSA9IG5ldyBQcmlzbWFDbGllbnQoKTtcclxuIl0sInZlcnNpb24iOjN9
