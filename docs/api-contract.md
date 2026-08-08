@@ -20,7 +20,7 @@ admin endpoints).
 | Method | Path | Request | Response |
 |---|---|---|---|
 | POST | `/api/v1/enroll` | `{account_id, public_key, attestation_blob}` | device cert |
-| POST | `/api/v1/auth/challenge` | `{}` | `{nonce}` |
+| POST | `/api/v1/auth/challenge` | `{device_id}` | `{nonce}` |
 | POST | `/api/v1/auth/verify` | `{device_id, signed_nonce}` | `{session_token}` |
 | POST | `/api/v1/purse/load` | device requests purse | `{purse_token}` |
 | POST | `/api/v1/purse/topup` | refill existing purse | `{purse_token}` |
@@ -111,15 +111,24 @@ paths:
   /auth/challenge:
     post:
       summary: Request a fresh nonce to authenticate with
+      description: >
+        Decided: requires device_id (not an empty body as originally documented). Nonces must be
+        device-scoped at issuance so /auth/verify can do an O(1) lookup, since verify only sends
+        {device_id, signed_nonce} and never echoes the plaintext nonce back.
       security: []
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
               type: object
               additionalProperties: false
-              properties: {}
+              required: [device_id]
+              properties:
+                device_id:
+                  type: string
+                  format: uuid
+                  description: The device requesting a nonce to authenticate with.
       responses:
         "200":
           description: Nonce issued
