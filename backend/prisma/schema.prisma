@@ -48,6 +48,13 @@ model Device {
   signature       String
   revokedAt       DateTime? @map("revoked_at")
   revokedReason   String?   @map("revoked_reason")
+  // Last time this device successfully called GET /sync/updates. Informational/observability
+  // only (e.g. "which devices haven't synced in a while") — NOT consulted to compute the CRL
+  // delta, which is driven entirely by the client-supplied `since` query param instead. See the
+  // comment on that route for why: trusting server-side memory of "what we last sent" over what
+  // the client explicitly asks for would risk silently under-delivering revocations to a device
+  // that lost its local cursor (e.g. reinstalled), which is the wrong failure mode for a CRL.
+  lastSyncUpdatesAt DateTime? @map("last_sync_updates_at")
 
   @@map("devices")
 }
@@ -124,6 +131,35 @@ model DoubleSpendIncident {
   detectedAt  DateTime @default(now()) @map("detected_at")
 
   @@map("double_spend_incidents")
+}
+
+// A disaster-mode event, toggled via POST /api/v1/admin/disaster/toggle and surfaced to devices
+// as a "flag" in GET /api/v1/sync/updates. Fields per the task spec (region_geo, type, active,
+// higher_cap, essential_only, started_at, ended_at) — none of this is in docs/*.md yet;
+// api-contract.md's current /admin/disaster/toggle schema only has {region, enabled}, notably
+// missing type/higher_cap/essential_only and using `region` not `region_geo` — flagging for
+// whoever implements that endpoint next to reconcile.
+model DisasterEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  // Freeform for now (region name/code) — real geographic boundary representation (polygon,
+  // geohash, etc.) is undecided; "_geo" in the field name is aspirational, not yet backed by an
+  // actual geo type. GET /sync/updates ignores this entirely today (see that route's comment):
+  // no device-location matching yet, every active event goes to every device.
+  regionGeo     String    @map("region_geo")
+  // Disaster category, e.g. "flood", "earthquake", "network_outage" — freeform, no enum decided.
+  type          String
+  active        Boolean   @default(true)
+  // Elevated offline spend cap during the disaster, decimal-paise string matching every other
+  // amount field's convention (see PurseToken.cap) — nullable since not every disaster
+  // necessarily overrides the cap.
+  higherCap     String?   @map("higher_cap")
+  // Restrict offline spend to "essential" purchases only while active. Surfaced as a flag only —
+  // no transaction-classification logic exists to actually enforce this yet.
+  essentialOnly Boolean   @default(false) @map("essential_only")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  endedAt       DateTime? @map("ended_at")
+
+  @@map("disaster_events")
 }
 
 // A trust attestation. Mirrors docs/trust-attestation-format.md.

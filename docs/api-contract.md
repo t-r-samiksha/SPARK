@@ -26,7 +26,7 @@ admin endpoints).
 | POST | `/api/v1/purse/topup` | refill existing purse | `{purse_token}` |
 | GET | `/api/v1/purse/status` | — | `{remaining, cap, expiry}` |
 | POST | `/api/v1/sync/transactions` | batch of signed txs | per-tx results + double-spend incidents |
-| GET | `/api/v1/sync/updates` | — | CRL + flags + trust attestations |
+| GET | `/api/v1/sync/updates` | `?since=<epoch_seconds>` (optional) | CRL delta + cursor + flags + cap + trust attestations |
 | GET | `/api/v1/trust/attestations?subject={id}` | — | signed edges |
 | GET | `/api/v1/merchant/{id}/trust` | — | reputation bundle |
 | GET | `/api/v1/limit/recommendation` | — | AI cap suggestion |
@@ -351,32 +351,98 @@ paths:
 
   /sync/updates:
     get:
-      summary: Pull CRL, flags, and trust attestations for offline caching
+      summary: Pull CRL, flags, cap, and trust attestations for offline caching
+      description: >
+        Decided: adds a `since` cursor query param and a `crl_cursor` response field, neither of
+        which existed in the original kickoff-inferred shape. Returning the *full* CRL on every
+        call doesn't scale over the weak/metered links this system is designed for, so `crl` is
+        now a delta: certs revoked since `since` (Unix epoch seconds — not ISO 8601; see
+        id-conventions.md#timestamps, `since` isn't one of the two documented exceptions), or the
+        full current CRL if `since` is omitted (first-sync case). Also resolves part of the
+        `flags` open question below for the disaster-event case specifically (fraud flags remain
+        undecided) and adds `recommended_cap` (not in the original shape either) — same field name
+        as GET /limit/recommendation's own response, still Member C's placeholder. See
+        src/api/sync/routes.ts (backend).
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: "^[0-9]+$"
+          description: >
+            Unix epoch seconds. Returns CRL entries revoked at or after this cursor. Omit for the
+            full current CRL (e.g. a device's first sync, or one that lost its local cursor).
       responses:
         "200":
           description: >
-            Response shape is inferred beyond "CRL + flags + trust attestations" — exact
-            structure of "flags" not specified in kickoff, confirm at next sync.
+            `flags` items include a `kind` discriminator so a future fraud-flag shape can coexist
+            in the same array unambiguously — see the open question on `flags` below, now
+            partially resolved for the "disaster-mode region flags" case.
           content:
             application/json:
               schema:
                 type: object
-                required: [crl, flags, trust_attestations]
+                required: [crl, crl_cursor, flags, recommended_cap, trust_attestations]
                 properties:
                   crl:
                     type: array
-                    description: Revoked certificate serial numbers.
+                    description: >
+                      Revoked certificate serial numbers revoked at or after `since` (or the full
+                      CRL if `since` was omitted).
                     items:
                       type: string
+                  crl_cursor:
+                    type: integer
+                    description: >
+                      Unix epoch seconds. Pass this back as `since` on the next call. Advances even
+                      when the delta is empty, so a client never has to re-query the same window.
                   flags:
                     type: array
                     description: >
-                      Open question: shape/purpose not specified in kickoff (e.g. per-account
-                      fraud flags, disaster-mode region flags, or both).
+                      Open question, partially resolved: shape/purpose beyond disaster-mode region
+                      flags (kind=disaster) not specified in kickoff — whether/how per-account
+                      fraud flags fit into this same array (a different `kind`, or a separate
+                      field) is still undecided.
                     items:
-                      type: object
+                      oneOf:
+                        - type: object
+                          required:
+                            [kind, type, region_geo, active, higher_cap, essential_only, started_at, ended_at]
+                          properties:
+                            kind:
+                              type: string
+                              enum: [disaster]
+                            type:
+                              type: string
+                              description: Disaster category, e.g. "flood" — freeform, no enum decided.
+                            region_geo:
+                              type: string
+                              description: >
+                                Freeform region name/code today; real geographic boundary
+                                representation (polygon, geohash, etc.) is undecided.
+                            active:
+                              type: boolean
+                            higher_cap:
+                              type: [string, "null"]
+                              description: Elevated offline spend cap during the disaster, decimal paise.
+                            essential_only:
+                              type: boolean
+                            started_at:
+                              type: integer
+                              description: Unix epoch seconds.
+                            ended_at:
+                              type: [integer, "null"]
+                              description: Unix epoch seconds.
+                  recommended_cap:
+                    type: string
+                    pattern: "^[0-9]+$"
+                    description: >
+                      Integer paise, decimal string. Same value/source as
+                      GET /limit/recommendation — still Member C's placeholder model.
                   trust_attestations:
                     type: array
+                    description: "TODO: stubbed as empty — real trust-graph logic belongs to Member C."
                     items:
                       $ref: "#/components/schemas/TrustAttestationPem"
 
