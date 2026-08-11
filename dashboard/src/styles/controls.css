@@ -1,0 +1,440 @@
+/* ============================================================
+   SPARK Operations Console — Tactical Operational Controls
+   Disaster Emergency Command · Cryptographic Revocation Terminal · Cap Intelligence
+   ============================================================ */
+
+/* ---- Common Control Element Styles ---- */
+
+.control-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--sp-1);
+}
+
+.step-dot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1-5);
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.step-dot__pill {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background-color: var(--bg-surface-inset);
+  border: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-dot.is-active {
+  color: var(--text-primary);
+}
+
+.step-dot.is-active .step-dot__pill {
+  background-color: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+
+.step-dot.is-danger.is-active .step-dot__pill {
+  background-color: var(--danger);
+  color: var(--danger-on);
+  border-color: var(--danger);
+}
+
+.step-dot.is-warning.is-active .step-dot__pill {
+  background-color: var(--warning);
+  color: var(--warning-on);
+  border-color: var(--warning);
+}
+
+.step-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-subtle);
+}
+
+/* ---- Disaster Emergency Command Center ---- */
+
+.disaster-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3-5);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface-inset);
+  border: 1px solid var(--border-default);
+  transition: background-color var(--dur-normal) var(--ease-out),
+    border-color var(--dur-normal) var(--ease-out);
+}
+
+.disaster-status-banner.is-active {
+  background-color: oklch(97% 0.035 70);
+  border-color: var(--warning);
+}
+
+.disaster-indicator-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2-5);
+}
+
+.disaster-mode-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.disaster-status-banner.is-active .disaster-mode-badge {
+  color: oklch(46% 0.13 70);
+}
+
+/* Active Emergency Broadcast Wave */
+.broadcast-wave-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 1rem;
+}
+
+.broadcast-bar {
+  width: 3px;
+  height: 100%;
+  background-color: var(--warning);
+  border-radius: 1px;
+  animation: wave-bar 1s ease-in-out infinite;
+}
+
+.broadcast-bar:nth-child(2) { animation-delay: 0.15s; }
+.broadcast-bar:nth-child(3) { animation-delay: 0.3s; }
+.broadcast-bar:nth-child(4) { animation-delay: 0.45s; }
+
+@keyframes wave-bar {
+  0%, 100% { height: 25%; }
+  50% { height: 100%; }
+}
+
+.disaster-active-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3-5);
+  background-color: oklch(97.5% 0.025 70);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  animation: slide-down var(--dur-normal) var(--ease-out);
+}
+
+.disaster-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+}
+
+.disaster-summary-label {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+}
+
+.disaster-summary-val {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Review & Confirm Box — a dashed frame marks it as pending, not committed */
+.confirmation-review-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3-5);
+  background-color: var(--bg-surface-inset);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  animation: slide-down var(--dur-fast) var(--ease-out);
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1-5);
+}
+
+.review-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--text-xs);
+}
+
+.review-item__k {
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  flex-shrink: 0;
+}
+
+.review-item__v {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Actions Row */
+.control-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- Cryptographic Device Revocation Terminal ---- */
+
+.revocation-terminal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.reason-presets-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1-5);
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  font-size: var(--text-3xs);
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-surface-inset);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.preset-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  background-color: var(--bg-surface-raised);
+}
+
+/* Success Revocation Receipt */
+.revocation-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3-5);
+  background-color: oklch(97.5% 0.025 160);
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-sm);
+  animation: slide-down var(--dur-normal) var(--ease-out);
+}
+
+.receipt-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.receipt-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--success);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-2);
+  background-color: var(--bg-surface);
+  padding: var(--sp-3);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+}
+
+.receipt-entry {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--text-xs);
+}
+
+.receipt-k {
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  flex-shrink: 0;
+}
+
+.receipt-v {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ---- Cap Intelligence & Model Explanation ---- */
+
+.cap-telemetry-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* The recommended cap is the one number this panel exists to state — it reads
+   as telemetry in mono, on an inset data well. */
+.cap-amount-hero {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background-color: var(--bg-surface-inset);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+}
+
+.cap-amount-title {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cap-amount-val {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Signal Decomposition Bars */
+.signal-decomposition {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2-5);
+  padding: var(--sp-3-5);
+  background-color: var(--bg-surface-raised);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.signal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.signal-row__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-3xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.signal-row__label { color: var(--text-muted); font-weight: 600; }
+.signal-row__score { font-family: var(--font-mono); color: var(--text-primary); font-weight: 600; }
+
+.signal-meter {
+  height: 4px;
+  background-color: var(--bg-surface-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.signal-meter__fill {
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 2px;
+  transition: width 1s var(--ease-spring);
+}
+
+/* 501 Unimplemented Designed Architecture Blueprint */
+/* Hazard hatching marks this as designed-but-unimplemented, never as data. */
+.cap-unimplemented-blueprint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3-5);
+  background: repeating-linear-gradient(
+    45deg,
+    oklch(98.4% 0.004 250),
+    oklch(98.4% 0.004 250) 10px,
+    oklch(96.6% 0.008 250) 10px,
+    oklch(96.6% 0.008 250) 20px
+  );
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.blueprint-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.blueprint-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  color: var(--info);
+  background-color: var(--info-muted);
+  border: 1px solid var(--info-border);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.blueprint-formula {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  padding: var(--sp-2);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.blueprint-notes {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+}

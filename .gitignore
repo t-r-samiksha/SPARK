@@ -1,0 +1,8 @@
+# Installed design skills (Impeccable, Hallmark) — reinstall via `npx skills add …`
+.agents/
+
+# Lockfile produced by the `npx skills` installer
+skills-lock.json
+
+# Hallmark design-tool run log (local tool state, not project source)
+.hallmark/
