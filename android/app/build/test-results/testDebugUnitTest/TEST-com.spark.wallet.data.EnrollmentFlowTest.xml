@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.spark.wallet.data.EnrollmentFlowTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-11T17:43:33" hostname="AKSHAYAS-BOOK" time="0.169">
+<testsuite name="com.spark.wallet.data.EnrollmentFlowTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-11T17:50:57" hostname="AKSHAYAS-BOOK" time="0.153">
   <properties/>
-  <testcase name="testEnrollmentRepositoryConflictAndErrorHandling" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.119"/>
-  <testcase name="testPublicKeyRawBase64UrlEncoding" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.002"/>
-  <testcase name="testCertificatePemWrappingAndParsing" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.012"/>
-  <testcase name="testEnrollmentRepositorySuccessFlow" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.008"/>
-  <testcase name="testOfflineCertificateVerificationWithCachedBankRootKey" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.028"/>
+  <testcase name="testEnrollmentRepositoryConflictAndErrorHandling" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.086"/>
+  <testcase name="testPublicKeyRawBase64UrlEncoding" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.005"/>
+  <testcase name="testCertificatePemWrappingAndParsing" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.005"/>
+  <testcase name="testEnrollmentRepositorySuccessFlow" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.01"/>
+  <testcase name="testOfflineCertificateVerificationWithCachedBankRootKey" classname="com.spark.wallet.data.EnrollmentFlowTest" time="0.047"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

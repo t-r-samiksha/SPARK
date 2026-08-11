@@ -164,6 +164,15 @@ class EnrollmentFlowTest {
                 )
                 return Response.success(EnrollResponse(cert = cert.toPem()))
             }
+
+            override suspend fun getLimitRecommendation(): Response<com.spark.wallet.network.LimitRecommendationResponse> =
+                throw UnsupportedOperationException()
+
+            override suspend fun loadPurse(request: com.spark.wallet.network.PurseLoadRequest): Response<com.spark.wallet.network.PurseLoadResponse> =
+                throw UnsupportedOperationException()
+
+            override suspend fun topUpPurse(request: com.spark.wallet.network.PurseTopUpRequest): Response<com.spark.wallet.network.PurseTopUpResponse> =
+                throw UnsupportedOperationException()
         }
 
         val networkClient = NetworkClient(customService = mockService)
@@ -207,6 +216,15 @@ class EnrollmentFlowTest {
                 val errorBody = "{\"error\":\"device already enrolled\"}".toResponseBody("application/json".toMediaType())
                 return Response.error(409, errorBody)
             }
+
+            override suspend fun getLimitRecommendation(): Response<com.spark.wallet.network.LimitRecommendationResponse> =
+                throw UnsupportedOperationException()
+
+            override suspend fun loadPurse(request: com.spark.wallet.network.PurseLoadRequest): Response<com.spark.wallet.network.PurseLoadResponse> =
+                throw UnsupportedOperationException()
+
+            override suspend fun topUpPurse(request: com.spark.wallet.network.PurseTopUpRequest): Response<com.spark.wallet.network.PurseTopUpResponse> =
+                throw UnsupportedOperationException()
         }
 
         val networkClient = NetworkClient(customService = mockConflictService)

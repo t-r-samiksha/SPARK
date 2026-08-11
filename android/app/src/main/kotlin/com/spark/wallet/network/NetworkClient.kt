@@ -32,6 +32,10 @@ class NetworkClient(
 ) {
     companion object {
         const val DEFAULT_BASE_URL = "https://spark-m1pt.onrender.com/api/v1/"
+
+        fun createApiService(baseUrl: String = DEFAULT_BASE_URL): SparkApiService {
+            return NetworkClient(baseUrl).apiService
+        }
     }
 
     private val json = Json {
@@ -40,7 +44,7 @@ class NetworkClient(
         encodeDefaults = true
     }
 
-    private val apiService: SparkApiService by lazy {
+    val apiService: SparkApiService by lazy {
         customService ?: createRetrofit(baseUrl).create(SparkApiService::class.java)
     }
 

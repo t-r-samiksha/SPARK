@@ -11,13 +11,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.spark.wallet.data.AppDatabase
 import com.spark.wallet.data.CertificateStore
 import com.spark.wallet.data.EnrollmentRepository
 import com.spark.wallet.data.KeyAliasStore
+import com.spark.wallet.data.PurseRepositoryImpl
 import com.spark.wallet.security.AttestationManager
 import com.spark.wallet.security.KeyStoreManager
 import com.spark.wallet.security.SecurityRepositoryImpl
 import com.spark.wallet.ui.screens.HomeScreen
+import com.spark.wallet.ui.screens.HomeViewModel
 import com.spark.wallet.ui.screens.OnboardingScreen
 import com.spark.wallet.ui.screens.OnboardingViewModel
 import com.spark.wallet.ui.theme.SparkWalletTheme
@@ -42,14 +46,23 @@ class MainActivity : ComponentActivity() {
         )
         val onboardingViewModel = OnboardingViewModel(enrollmentRepository, securityRepository)
 
+        val database = AppDatabase.getDatabase(applicationContext)
+        val purseRepository = PurseRepositoryImpl(database.purseDao(), certificateStore = certificateStore)
+
         setContent {
             SparkWalletTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var isEnrolled by remember { mutableStateOf(certificateStore.isEnrolled()) }
 
                     if (isEnrolled) {
-                        val deviceId = keyAliasStore.getDeviceId() ?: "DEV-SPARK-ENROLLED"
-                        HomeScreen(deviceId = deviceId)
+                        val homeViewModel: HomeViewModel = viewModel(
+                            factory = HomeViewModel.provideFactory(
+                                purseRepository = purseRepository,
+                                ledgerDao = database.ledgerDao(),
+                                certificateStore = certificateStore
+                            )
+                        )
+                        HomeScreen(viewModel = homeViewModel)
                     } else {
                         OnboardingScreen(
                             viewModel = onboardingViewModel,

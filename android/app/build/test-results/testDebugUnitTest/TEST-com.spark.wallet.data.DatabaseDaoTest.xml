@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.spark.wallet.data.DatabaseDaoTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-11T17:43:32" hostname="AKSHAYAS-BOOK" time="0.039">
+<testsuite name="com.spark.wallet.data.DatabaseDaoTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-11T17:50:57" hostname="AKSHAYAS-BOOK" time="0.048">
   <properties/>
-  <testcase name="testDatabaseKeyManagerInvalidBlobThrows" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.004"/>
-  <testcase name="testCachedCertEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.001"/>
-  <testcase name="testAppDatabaseMigrationStub" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.003"/>
+  <testcase name="testDatabaseKeyManagerInvalidBlobThrows" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.005"/>
+  <testcase name="testCachedCertEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.002"/>
+  <testcase name="testAppDatabaseMigrationStub" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.004"/>
   <testcase name="testCachedTrustEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.001"/>
-  <testcase name="testLocalPurseEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.0"/>
-  <testcase name="testLocalLedgerEntryEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.0"/>
+  <testcase name="testLocalPurseEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.001"/>
+  <testcase name="testLocalLedgerEntryEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.001"/>
   <testcase name="testPendingRelayEntityRoundTrip" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.001"/>
-  <testcase name="testDatabaseKeyManagerKeystorePassphraseSealingAndUnsealing" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.027"/>
+  <testcase name="testDatabaseKeyManagerKeystorePassphraseSealingAndUnsealing" classname="com.spark.wallet.data.DatabaseDaoTest" time="0.031"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
