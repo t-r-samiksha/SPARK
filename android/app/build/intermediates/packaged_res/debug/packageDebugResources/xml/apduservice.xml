@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<host-apdu-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/app_name"
+    android:requireDeviceUnlock="false">
+    <aid-group
+        android:category="other"
+        android:description="@string/app_name">
+        <!-- SPARK Application Identifier (AID): F0 53 50 41 52 4B 01 -->
+        <aid-filter android:name="F0535041524B01" />
+    </aid-group>
+</host-apdu-service>

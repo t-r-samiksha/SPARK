@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-66:12
-INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-66:12
-INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-66:12
-INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-66:12
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-79:12
+INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-79:12
+INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-79:12
+INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:2:1-79:12
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Admin\.gradle\caches\8.11.1\transforms\7b49f4e91142fbe02fc3ea2b85ca2ec9\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:17:1-27:12
 MERGED from [no.nordicsemi.android:ble-ktx:2.9.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c9870ab40f0cba085e91a72f2d1c3410\transformed\ble-ktx-2.9.0\AndroidManifest.xml:2:1-7:12
 MERGED from [no.nordicsemi.android:ble:2.9.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\27bb987bfac8b3bfeecfca2cd8e31c6e\transformed\ble-2.9.0\AndroidManifest.xml:2:1-17:12
@@ -215,8 +215,8 @@ ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\Andr
 	android:name
 		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:42:9-44
 application
-ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:45:5-64:19
-INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:45:5-64:19
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:45:5-77:19
+INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:45:5-77:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\6f2c454c389b904b6c6ff250e95a0cc1\transformed\ui-tooling-release\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\6f2c454c389b904b6c6ff250e95a0cc1\transformed\ui-tooling-release\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-test-manifest:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\2e316b2b4815939ddda76dba2a01a880\transformed\ui-test-manifest-1.7.5\AndroidManifest.xml:22:5-26:19
@@ -281,6 +281,26 @@ category#android.intent.category.LAUNCHER
 ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:60:17-77
 	android:name
 		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:60:27-74
+service#com.spark.wallet.protocol.SparkHostApduService
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:65:9-75:19
+	android:exported
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:67:13-36
+	android:permission
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:68:13-69
+	android:name
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:66:13-58
+intent-filter#action:name:android.nfc.cardemulation.action.HOST_APDU_SERVICE
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:69:13-71:29
+action#android.nfc.cardemulation.action.HOST_APDU_SERVICE
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:70:17-93
+	android:name
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:70:25-90
+meta-data#android.nfc.cardemulation.host_apdu_service
+ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:72:13-74:55
+	android:resource
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:74:17-52
+	android:name
+		ADDED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:73:17-75
 uses-sdk
 INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml

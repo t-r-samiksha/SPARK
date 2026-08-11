@@ -146,5 +146,19 @@ class TransactionBuilder {
 
             return unsignedTx.copy(signature = signature)
         }
+
+        fun serialize(tx: SparkTransaction): String {
+            return kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            }.encodeToString(SparkTransaction.serializer(), tx)
+        }
+
+        fun deserialize(jsonString: String): SparkTransaction {
+            return kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }.decodeFromString(SparkTransaction.serializer(), jsonString)
+        }
     }
 }

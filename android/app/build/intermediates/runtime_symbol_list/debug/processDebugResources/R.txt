@@ -2022,3 +2022,4 @@ int styleable zxing_finder_zxing_viewfinder_laser_visibility 3
 int styleable zxing_finder_zxing_viewfinder_mask 4
 int[] styleable zxing_view { 0x7f030137 }
 int styleable zxing_view_zxing_scanner_layout 0
+int xml apduservice 0x7f110000

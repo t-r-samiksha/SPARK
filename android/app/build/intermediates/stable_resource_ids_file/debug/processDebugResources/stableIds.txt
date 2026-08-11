@@ -1320,6 +1320,7 @@ com.spark.wallet.debug:dimen/abc_dialog_list_padding_bottom_no_buttons = 0x7f060
 com.spark.wallet.debug:dimen/abc_action_bar_default_height_material = 0x7f060002
 com.spark.wallet.debug:style/TextAppearance.AppCompat.Widget.Button.Inverse = 0x7f0f00ea
 com.spark.wallet.debug:attr/customNavigationLayout = 0x7f030061
+com.spark.wallet.debug:xml/apduservice = 0x7f110000
 com.spark.wallet.debug:string/m3c_time_picker_minute_suffix = 0x7f0e0085
 com.spark.wallet.debug:attr/contentInsetStartWithNavigation = 0x7f03005f
 com.spark.wallet.debug:string/abc_menu_space_shortcut_label = 0x7f0e000f

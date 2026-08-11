@@ -4,6 +4,10 @@
         "source": "com.spark.wallet.app-main-69:/drawable/ic_launcher_foreground.xml"
     },
     {
+        "merged": "com.spark.wallet.app-debug-67:/xml_apduservice.xml.flat",
+        "source": "com.spark.wallet.app-main-69:/xml/apduservice.xml"
+    },
+    {
         "merged": "com.spark.wallet.app-debug-67:/drawable_ic_launcher_background.xml.flat",
         "source": "com.spark.wallet.app-main-69:/drawable/ic_launcher_background.xml"
     },
