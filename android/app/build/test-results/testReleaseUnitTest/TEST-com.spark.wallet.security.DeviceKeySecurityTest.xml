@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.spark.wallet.security.DeviceKeySecurityTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-11T16:51:19" hostname="AKSHAYAS-BOOK" time="0.104">
+<testsuite name="com.spark.wallet.security.DeviceKeySecurityTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-11T17:07:58" hostname="AKSHAYAS-BOOK" time="0.054">
   <properties/>
-  <testcase name="testKeyAliasIsStoredAndRetrievableWithoutPrivateKeyMaterial" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.049"/>
+  <testcase name="testKeyAliasIsStoredAndRetrievableWithoutPrivateKeyMaterial" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.008"/>
   <testcase name="testAttestationStatusAndBackingIndicator" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.005"/>
-  <testcase name="testAttemptingToExportRawPrivateKeyMaterialFailsAndThrows" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.019"/>
+  <testcase name="testAttemptingToExportRawPrivateKeyMaterialFailsAndThrows" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.003"/>
   <testcase name="testKeyAliasStoreBlankAliasValidation" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.0"/>
-  <testcase name="testKeyGenerationSucceeds" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.003"/>
-  <testcase name="testStrongBoxBackingPreferenceAndFallback" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.0"/>
-  <testcase name="testSigningCryptoObjectInitialization" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.008"/>
-  <testcase name="testEd25519SigningAndVerification" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.019"/>
+  <testcase name="testKeyGenerationSucceeds" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.004"/>
+  <testcase name="testStrongBoxBackingPreferenceAndFallback" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.001"/>
+  <testcase name="testSigningCryptoObjectInitialization" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.004"/>
+  <testcase name="testEd25519SigningAndVerification" classname="com.spark.wallet.security.DeviceKeySecurityTest" time="0.026"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
