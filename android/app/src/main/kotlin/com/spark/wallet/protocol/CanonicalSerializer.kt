@@ -51,11 +51,49 @@ object CanonicalSerializer {
     }
 
     /**
-     * Produces the pre-signature canonical UTF-8 bytes for a [SparkTransaction].
+     * Produces the pre-signature canonical UTF-8 bytes for a [SparkTransaction] (excluding `signature`).
      */
     fun canonicalize(tx: SparkTransaction): ByteArray {
+        return canonicalize(tx, excludeSignature = true)
+    }
+
+    /**
+     * Produces canonical UTF-8 bytes for a [SparkTransaction], optionally excluding or including `signature`.
+     */
+    fun canonicalize(tx: SparkTransaction, excludeSignature: Boolean): ByteArray {
         val jsonObject = json.encodeToJsonElement(SparkTransaction.serializer(), tx).jsonObject
-        return canonicalize(jsonObject, excludeSignature = true)
+        return canonicalize(jsonObject, excludeSignature)
+    }
+
+    /**
+     * Produces pre-signature canonical bytes (excluding `signature`).
+     */
+    fun canonicalizeForSigning(tx: SparkTransaction): ByteArray {
+        return canonicalize(tx, excludeSignature = true)
+    }
+
+    /**
+     * Produces full canonical bytes of a completed signed transaction (including `signature`).
+     */
+    fun canonicalizeFull(tx: SparkTransaction): ByteArray {
+        return canonicalize(tx, excludeSignature = false)
+    }
+
+    /**
+     * Computes the chaining hash for a transaction.
+     * Defined as: SHA-256 of canonical JSON INCLUDING signature, base64url-encoded without padding.
+     */
+    fun computeTransactionHash(tx: SparkTransaction): String {
+        val fullBytes = canonicalizeFull(tx)
+        return computeTransactionHash(fullBytes)
+    }
+
+    /**
+     * Computes SHA-256 hash of raw bytes, base64url-encoded without padding.
+     */
+    fun computeTransactionHash(bytes: ByteArray): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
     }
 
     /**

@@ -26,7 +26,7 @@ sealed class CertificateValidationResult {
  * Offline transaction verification (peer-to-peer / stranger verification) relies on this store
  * to validate counterparty certificates without any network access.
  */
-class CertificateStore(private val context: Context? = null) {
+open class CertificateStore(private val context: Context? = null) {
 
     companion object {
         private const val PREFS_NAME = "spark_certificate_store_prefs"
@@ -50,7 +50,7 @@ class CertificateStore(private val context: Context? = null) {
     /**
      * Persists the enrolled device certificate (full PEM).
      */
-    fun saveDeviceCertificate(pem: String) {
+    open fun saveDeviceCertificate(pem: String) {
         require(pem.isNotBlank()) { "Certificate PEM cannot be blank" }
         // Validate that it parses cleanly before persisting
         CertificateFormat.parseDeviceCertificate(pem)
@@ -62,14 +62,14 @@ class CertificateStore(private val context: Context? = null) {
     /**
      * Retrieves the stored device certificate PEM.
      */
-    fun getDeviceCertificate(): String? {
+    open fun getDeviceCertificate(): String? {
         return prefs?.getString(KEY_DEVICE_CERT_PEM, null) ?: inMemoryDeviceCertPem
     }
 
     /**
      * Retrieves and parses the stored device certificate into a [SparkCertificate].
      */
-    fun getParsedDeviceCertificate(): SparkCertificate? {
+    open fun getParsedDeviceCertificate(): SparkCertificate? {
         val pem = getDeviceCertificate() ?: return null
         return try {
             CertificateFormat.parseDeviceCertificate(pem)
@@ -79,16 +79,31 @@ class CertificateStore(private val context: Context? = null) {
     }
 
     /**
+     * Retrieves the device ID from the stored certificate.
+     */
+    open fun getDeviceId(): String? = getParsedDeviceCertificate()?.deviceId
+
+    /**
+     * Retrieves the account ID from the stored certificate.
+     */
+    open fun getAccountId(): String? = getParsedDeviceCertificate()?.accountId
+
+    /**
+     * Retrieves the stored device certificate PEM (alias for getDeviceCertificate).
+     */
+    open fun getDeviceCertificatePem(): String? = getDeviceCertificate()
+
+    /**
      * Checks if the device has a valid, stored enrollment certificate.
      */
-    fun isEnrolled(): Boolean {
+    open fun isEnrolled(): Boolean {
         return getDeviceCertificate() != null
     }
 
     /**
      * Caches the Bank Root CA certificate / public key locally for offline stranger verification.
      */
-    fun saveBankRootCertificate(pemOrPublicKey: String) {
+    open fun saveBankRootCertificate(pemOrPublicKey: String) {
         require(pemOrPublicKey.isNotBlank()) { "Bank root CA value cannot be blank" }
         if (pemOrPublicKey.contains("BEGIN")) {
             inMemoryBankRootCaPem = pemOrPublicKey
@@ -102,14 +117,14 @@ class CertificateStore(private val context: Context? = null) {
     /**
      * Retrieves the cached Bank Root CA certificate PEM, if available.
      */
-    fun getBankRootCertificate(): String? {
+    open fun getBankRootCertificate(): String? {
         return prefs?.getString(KEY_BANK_ROOT_CA_PEM, null) ?: inMemoryBankRootCaPem
     }
 
     /**
      * Retrieves the active Bank Root CA Ed25519 public key (base64url unpadded).
      */
-    fun getBankRootPublicKey(): String {
+    open fun getBankRootPublicKey(): String {
         return prefs?.getString(KEY_BANK_ROOT_CA_PUBKEY, null)
             ?: inMemoryBankRootCaPubKey
             ?: DEFAULT_BANK_ROOT_CA_PUBLIC_KEY
@@ -123,7 +138,7 @@ class CertificateStore(private val context: Context? = null) {
      * 3. Validity time window (not_before <= now <= not_after).
      * 4. Ed25519 signature verification against the locally cached Bank Root CA public key.
      */
-    fun verifyCertificateOffline(certPem: String, expectedDeviceId: String? = null): CertificateValidationResult {
+    open fun verifyCertificateOffline(certPem: String, expectedDeviceId: String? = null): CertificateValidationResult {
         val cert = try {
             CertificateFormat.parseDeviceCertificate(certPem)
         } catch (e: Exception) {
