@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="spark_purple_background">#1C1B1F</color>
+    <color name="spark_purple_primary">#6750A4</color>
+    <color name="spark_teal_accent">#03DAC5</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="app_name">SPARK Wallet</string>
+    <style name="Theme.SparkWallet" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/spark_purple_background</item>
+        <item name="android:navigationBarColor">@color/spark_purple_background</item>
+    </style>
+</resources>

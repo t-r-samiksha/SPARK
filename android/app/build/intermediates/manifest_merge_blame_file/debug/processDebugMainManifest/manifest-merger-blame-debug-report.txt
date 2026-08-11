@@ -1,0 +1,323 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.spark.wallet.debug"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <!-- Network -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:6:5-67
+12-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:6:22-64
+13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+13-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:7:5-79
+13-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:7:22-76
+14
+15    <!-- Camera / QR Scanning -->
+16    <uses-permission android:name="android.permission.CAMERA" />
+16-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:10:5-65
+16-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:10:22-62
+17
+18    <uses-feature
+18-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:11:5-13:36
+19        android:name="android.hardware.camera"
+19-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:12:9-47
+20        android:required="false" />
+20-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:13:9-33
+21    <uses-feature
+21-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:14:5-16:36
+22        android:name="android.hardware.camera.autofocus"
+22-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:15:9-57
+23        android:required="false" />
+23-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:16:9-33
+24
+25    <!-- Biometrics & StrongBox / Keystore -->
+26    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+26-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:19:5-72
+26-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:19:22-69
+27
+28    <uses-feature
+28-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:20:5-22:36
+29        android:name="android.hardware.strongbox_keystore"
+29-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:21:9-59
+30        android:required="false" />
+30-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:22:9-33
+31    <uses-feature
+31-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:23:5-25:36
+32        android:name="android.hardware.fingerprint"
+32-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:24:9-52
+33        android:required="false" />
+33-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:25:9-33
+34
+35    <!-- Bluetooth Low Energy (Tap handshake) -->
+36    <uses-permission
+36-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:28:5-95
+37        android:name="android.permission.BLUETOOTH"
+37-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:28:22-65
+38        android:maxSdkVersion="30" />
+38-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:28:66-92
+39    <uses-permission
+39-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:29:5-101
+40        android:name="android.permission.BLUETOOTH_ADMIN"
+40-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:29:22-71
+41        android:maxSdkVersion="30" />
+41-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:29:72-98
+42    <uses-permission
+42-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:30:5-140
+43        android:name="android.permission.BLUETOOTH_SCAN"
+43-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:30:22-70
+44        android:usesPermissionFlags="neverForLocation" />
+44-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:30:71-117
+45    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+45-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:31:5-98
+45-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:31:22-75
+46    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+46-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:32:5-96
+46-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:32:22-73
+47    <uses-permission
+47-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:33:5-106
+48        android:name="android.permission.ACCESS_FINE_LOCATION"
+48-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:33:22-76
+49        android:maxSdkVersion="30" />
+49-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:33:77-103
+50    <uses-permission
+50-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:34:5-108
+51        android:name="android.permission.ACCESS_COARSE_LOCATION"
+51-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:34:22-78
+52        android:maxSdkVersion="30" />
+52-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:34:79-105
+53
+54    <uses-feature
+54-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:35:5-37:36
+55        android:name="android.hardware.bluetooth_le"
+55-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:36:9-53
+56        android:required="false" />
+56-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:37:9-33
+57
+58    <!-- NFC -->
+59    <uses-permission android:name="android.permission.NFC" />
+59-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:40:5-62
+59-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:40:22-59
+60
+61    <uses-feature
+61-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:41:5-43:36
+62        android:name="android.hardware.nfc"
+62-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:42:9-44
+63        android:required="false" />
+63-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:43:9-33
+64
+65    <!-- suppress DeprecatedClassUsageInspection -->
+66    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+66-->[androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Admin\.gradle\caches\8.11.1\transforms\7b49f4e91142fbe02fc3ea2b85ca2ec9\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:25:5-74
+66-->[androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Admin\.gradle\caches\8.11.1\transforms\7b49f4e91142fbe02fc3ea2b85ca2ec9\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:25:22-71
+67
+68    <permission
+68-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
+69        android:name="com.spark.wallet.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+69-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
+70        android:protectionLevel="signature" />
+70-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
+71
+72    <uses-permission android:name="com.spark.wallet.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+72-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
+72-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
+73
+74    <uses-feature
+74-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
+75        android:name="android.hardware.camera.front"
+75-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:29:9-53
+76        android:required="false" />
+76-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:30:9-33
+77    <uses-feature
+77-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
+78        android:name="android.hardware.camera.flash"
+78-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:37:9-53
+79        android:required="false" />
+79-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:38:9-33
+80    <uses-feature
+80-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:39:5-41:36
+81        android:name="android.hardware.screen.landscape"
+81-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:40:9-57
+82        android:required="false" />
+82-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:41:9-33
+83    <uses-feature
+83-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:42:5-44:36
+84        android:name="android.hardware.wifi"
+84-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:43:9-45
+85        android:required="false" />
+85-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:44:9-33
+86
+87    <application
+87-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:45:5-64:19
+88        android:allowBackup="false"
+88-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:46:9-36
+89        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+89-->[androidx.core:core:1.15.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\c1d78b46420a1f4fb7f9f93363cb487f\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
+90        android:debuggable="true"
+91        android:extractNativeLibs="false"
+92        android:icon="@mipmap/ic_launcher"
+92-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:47:9-43
+93        android:label="@string/app_name"
+93-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:48:9-41
+94        android:roundIcon="@mipmap/ic_launcher_round"
+94-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:49:9-54
+95        android:supportsRtl="true"
+95-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:50:9-35
+96        android:theme="@style/Theme.SparkWallet" >
+96-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:51:9-49
+97        <activity
+97-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:54:9-62:20
+98            android:name="com.spark.wallet.MainActivity"
+98-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:55:13-41
+99            android:exported="true"
+99-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:56:13-36
+100            android:theme="@style/Theme.SparkWallet" >
+100-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:57:13-53
+101            <intent-filter>
+101-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:58:13-61:29
+102                <action android:name="android.intent.action.MAIN" />
+102-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:59:17-69
+102-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:59:25-66
+103
+104                <category android:name="android.intent.category.LAUNCHER" />
+104-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:60:17-77
+104-->C:\Users\Admin\OneDrive\Desktop\spark\SPARK\android\app\src\main\AndroidManifest.xml:60:27-74
+105            </intent-filter>
+106        </activity>
+107        <activity
+107-->[androidx.compose.ui:ui-tooling-android:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\6f2c454c389b904b6c6ff250e95a0cc1\transformed\ui-tooling-release\AndroidManifest.xml:23:9-25:39
+108            android:name="androidx.compose.ui.tooling.PreviewActivity"
+108-->[androidx.compose.ui:ui-tooling-android:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\6f2c454c389b904b6c6ff250e95a0cc1\transformed\ui-tooling-release\AndroidManifest.xml:24:13-71
+109            android:exported="true" />
+109-->[androidx.compose.ui:ui-tooling-android:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\6f2c454c389b904b6c6ff250e95a0cc1\transformed\ui-tooling-release\AndroidManifest.xml:25:13-36
+110        <activity
+110-->[androidx.compose.ui:ui-test-manifest:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\2e316b2b4815939ddda76dba2a01a880\transformed\ui-test-manifest-1.7.5\AndroidManifest.xml:23:9-25:39
+111            android:name="androidx.activity.ComponentActivity"
+111-->[androidx.compose.ui:ui-test-manifest:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\2e316b2b4815939ddda76dba2a01a880\transformed\ui-test-manifest-1.7.5\AndroidManifest.xml:24:13-63
+112            android:exported="true" />
+112-->[androidx.compose.ui:ui-test-manifest:1.7.5] C:\Users\Admin\.gradle\caches\8.11.1\transforms\2e316b2b4815939ddda76dba2a01a880\transformed\ui-test-manifest-1.7.5\AndroidManifest.xml:25:13-36
+113
+114        <provider
+114-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+115            android:name="androidx.startup.InitializationProvider"
+115-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+116            android:authorities="com.spark.wallet.debug.androidx-startup"
+116-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+117            android:exported="false" >
+117-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+118            <meta-data
+118-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+119                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+119-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+120                android:value="androidx.startup" />
+120-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\cd30b2596ae782a3ddf8fed65be47d46\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+121            <meta-data
+121-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\Admin\.gradle\caches\8.11.1\transforms\4bd82c4b3cbf288c9b56061b7427dc99\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:29:13-31:52
+122                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+122-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\Admin\.gradle\caches\8.11.1\transforms\4bd82c4b3cbf288c9b56061b7427dc99\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:30:17-78
+123                android:value="androidx.startup" />
+123-->[androidx.lifecycle:lifecycle-process:2.8.7] C:\Users\Admin\.gradle\caches\8.11.1\transforms\4bd82c4b3cbf288c9b56061b7427dc99\transformed\lifecycle-process-2.8.7\AndroidManifest.xml:31:17-49
+124            <meta-data
+124-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+125                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+125-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+126                android:value="androidx.startup" />
+126-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+127        </provider>
+128
+129        <service
+129-->[androidx.room:room-runtime:2.6.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\fea786b2b931cfdf887c9e0f022d28ca\transformed\room-runtime-2.6.1\AndroidManifest.xml:24:9-28:63
+130            android:name="androidx.room.MultiInstanceInvalidationService"
+130-->[androidx.room:room-runtime:2.6.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\fea786b2b931cfdf887c9e0f022d28ca\transformed\room-runtime-2.6.1\AndroidManifest.xml:25:13-74
+131            android:directBootAware="true"
+131-->[androidx.room:room-runtime:2.6.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\fea786b2b931cfdf887c9e0f022d28ca\transformed\room-runtime-2.6.1\AndroidManifest.xml:26:13-43
+132            android:exported="false" />
+132-->[androidx.room:room-runtime:2.6.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\fea786b2b931cfdf887c9e0f022d28ca\transformed\room-runtime-2.6.1\AndroidManifest.xml:27:13-37
+133        <!--
+134		Service used to scan in background to emulate scanning with
+135		PendingIntent on Android 4.3 - 7.x. Service will scan in background with given
+136		settings and filters.
+137        -->
+138        <service
+138-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:41:9-43:40
+139            android:name="no.nordicsemi.android.support.v18.scanner.ScannerService"
+139-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:42:13-84
+140            android:exported="false" />
+140-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:43:13-37
+141        <!--
+142		The receiver used to scan with PendingIntent on Android 8+.
+143		It will translate results from android.bluetooth.le package to
+144		no.nordicsemi.android.support.v18, apply filters or perform batching,
+145		depending on the settings.
+146        -->
+147        <receiver
+147-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:51:9-58:20
+148            android:name="no.nordicsemi.android.support.v18.scanner.PendingIntentReceiver"
+148-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:52:13-91
+149            android:exported="true" >
+149-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:53:13-36
+150            <intent-filter>
+150-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:55:13-57:29
+151                <action android:name="no.nordicsemi.android.support.v18.ACTION_FOUND" />
+151-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:56:17-89
+151-->[no.nordicsemi.android.support.v18:scanner:1.6.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\655fe68192449606d42040ceb4b3e127\transformed\scanner-1.6.0\AndroidManifest.xml:56:25-86
+152            </intent-filter>
+153        </receiver>
+154        <receiver
+154-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+155            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+156            android:directBootAware="false"
+156-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+157            android:enabled="true"
+157-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+158            android:exported="true"
+158-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+159            android:permission="android.permission.DUMP" >
+159-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+160            <intent-filter>
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+161                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+162            </intent-filter>
+163            <intent-filter>
+163-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+164                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+164-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+164-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+165            </intent-filter>
+166            <intent-filter>
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+167                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+167-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+167-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+168            </intent-filter>
+169            <intent-filter>
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+170                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+170-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+170-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Admin\.gradle\caches\8.11.1\transforms\58753d6075c67f346d9221560ec3717c\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+171            </intent-filter>
+172        </receiver>
+173
+174        <activity
+174-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
+175            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+175-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
+176            android:clearTaskOnLaunch="true"
+176-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
+177            android:screenOrientation="sensorLandscape"
+177-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
+178            android:stateNotNeeded="true"
+178-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
+179            android:theme="@style/zxing_CaptureTheme"
+179-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
+180            android:windowSoftInputMode="stateAlwaysHidden" />
+180-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Admin\.gradle\caches\8.11.1\transforms\452326b6b06e6c07bdb16aa0564226f8\transformed\zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
+181    </application>
+182
+183</manifest>
