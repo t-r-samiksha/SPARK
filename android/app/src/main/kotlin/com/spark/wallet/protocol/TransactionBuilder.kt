@@ -1,10 +1,9 @@
 package com.spark.wallet.protocol
 
+import com.spark.wallet.security.KeyStoreManager
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
+import java.util.Base64
 import java.util.UUID
 
 @Serializable
@@ -25,7 +24,14 @@ data class SparkTransaction(
     @SerialName("prev_tx_hash") val prevTxHash: String?,
     @SerialName("timestamp") val timestamp: Long,
     @SerialName("signature") val signature: String
-)
+) {
+    /**
+     * Returns the canonical UTF-8 bytes to be signed (excluding `signature`).
+     */
+    fun toCanonicalSigningBytes(): ByteArray {
+        return CanonicalSerializer.canonicalize(this)
+    }
+}
 
 class TransactionBuilder {
 
@@ -38,8 +44,10 @@ class TransactionBuilder {
     private var prevTxHash: String? = null
     private var timestamp: Long = System.currentTimeMillis() / 1000
 
+    fun setTxId(id: String) = apply { this.txId = id }
     fun setTokenId(id: String) = apply { this.tokenId = id }
     fun setAmountPaise(amount: Long) = apply { this.amountPaise = amount }
+    fun setAmount(amountStr: String) = apply { this.amountPaise = amountStr.toLong() }
     fun setPayer(payer: Party) = apply { this.payer = payer }
     fun setPayee(payee: Party) = apply { this.payee = payee }
     fun setDeviceCounter(counter: Long) = apply { this.deviceCounter = counter }
@@ -54,21 +62,19 @@ class TransactionBuilder {
         requireNotNull(payer) { "payer is required" }
         requireNotNull(payee) { "payee is required" }
 
-        val jsonObject = Json.encodeToJsonElement(
-            SparkTransaction(
-                txId = txId,
-                tokenId = tokenId!!,
-                amount = amountPaise.toString(),
-                payer = payer!!,
-                payee = payee!!,
-                deviceCounter = deviceCounter,
-                prevTxHash = prevTxHash,
-                timestamp = timestamp,
-                signature = "" // placeholder, excluded during canonicalization
-            )
-        ).jsonObject
+        val tx = SparkTransaction(
+            txId = txId,
+            tokenId = tokenId!!,
+            amount = amountPaise.toString(),
+            payer = payer!!,
+            payee = payee!!,
+            deviceCounter = deviceCounter,
+            prevTxHash = prevTxHash,
+            timestamp = timestamp,
+            signature = ""
+        )
 
-        return CanonicalSerializer.canonicalBytes(jsonObject, excludeSignature = true)
+        return CanonicalSerializer.canonicalize(tx)
     }
 
     /**
@@ -90,5 +96,55 @@ class TransactionBuilder {
             timestamp = timestamp,
             signature = signatureBase64Url
         )
+    }
+
+    companion object {
+        /**
+         * Canonicalizes a transaction into pre-signature UTF-8 bytes.
+         */
+        fun canonicalize(tx: SparkTransaction): ByteArray {
+            return CanonicalSerializer.canonicalize(tx)
+        }
+
+        /**
+         * Signs pre-signature bytes using KeyStoreManager with the hardware-backed key for an alias.
+         * Returns base64url-encoded signature without padding.
+         */
+        fun sign(bytes: ByteArray, keyStoreManager: KeyStoreManager, alias: String): String {
+            val rawSignature = keyStoreManager.sign(alias, bytes)
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(rawSignature)
+        }
+
+        /**
+         * Assembles and signs a complete SparkTransaction.
+         */
+        fun buildSignedTransaction(
+            txId: String = UUID.randomUUID().toString(),
+            tokenId: String,
+            amountPaise: Long,
+            payer: Party,
+            payee: Party,
+            deviceCounter: Long,
+            prevTxHash: String?,
+            timestamp: Long = System.currentTimeMillis() / 1000,
+            signer: (ByteArray) -> String
+        ): SparkTransaction {
+            val unsignedTx = SparkTransaction(
+                txId = txId,
+                tokenId = tokenId,
+                amount = amountPaise.toString(),
+                payer = payer,
+                payee = payee,
+                deviceCounter = deviceCounter,
+                prevTxHash = prevTxHash,
+                timestamp = timestamp,
+                signature = ""
+            )
+
+            val canonicalBytes = CanonicalSerializer.canonicalize(unsignedTx)
+            val signature = signer(canonicalBytes)
+
+            return unsignedTx.copy(signature = signature)
+        }
     }
 }
