@@ -16,9 +16,29 @@ export interface DoubleSpendIncident {
   detected_at: number; // Unix epoch seconds
 }
 
-/** Shape TBD (contract open question) — backend currently always returns [] for fraud_flag. */
+/** One reason a device was flagged, from the intelligence service's scoring. */
+export interface FraudReason {
+  key: string;
+  label: string;
+  /** Normalised [0,1] — higher is more suspicious. */
+  score: number;
+  detail: string;
+}
+
+/**
+ * Produced by the SPARK intelligence service (ai/) and served through
+ * GET /admin/incidents?type=fraud_flag. Every field beyond `type` is additive to the contract,
+ * which still only guarantees `type`.
+ */
 export interface FraudFlagIncident {
   type: 'fraud_flag';
+  id?: string;
+  device_id?: string;
+  /** Composite suspicion [0,1]. */
+  score?: number;
+  reasons?: FraudReason[];
+  detected_at?: number;
+  model_version?: string;
 }
 
 export type Incident = DoubleSpendIncident | FraudFlagIncident;
@@ -57,8 +77,30 @@ export interface DisasterEvent {
   updated_at: number; // Unix epoch seconds
 }
 
+/** One scored input to the cap recommendation. */
+export interface CapSignal {
+  key: string;
+  label: string;
+  /** Normalised [0,1] — higher is safer. */
+  score: number;
+  /** Relative contribution to the composite. */
+  weight: number;
+  detail: string;
+}
+
 export interface RecommendedCap {
   recommended_cap: string; // integer paise, decimal string
+  /** Flat cap the bank falls back to when the model is unavailable. */
+  baseline_cap?: string;
+  /** Composite of the signals below, [0,1]. */
+  confidence?: number;
+  signals?: CapSignal[];
+  /** Present when an active disaster event raised the cap above the model's own output. */
+  disaster_override?: { region_geo: string; higher_cap: string } | null;
+  /** True when the account's real balance, not the score, was the binding constraint. */
+  balance_capped?: boolean;
+  model_version?: string;
+  computed_at?: number;
 }
 
 /** Backend health endpoint (no auth). */

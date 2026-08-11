@@ -171,7 +171,7 @@ export default async function syncRoutes(fastify: FastifyInstance): Promise<void
         })),
         // Not in docs/api-contract.md today — same field name as GET /limit/recommendation's own
         // response for consistency. Still Member C's placeholder (see limitStub.ts).
-        recommended_cap: getRecommendedCap(),
+        recommended_cap: await getRecommendedCap(deviceId),
         trust_attestations: trustEdges.map(buildAttestationPem),
       });
     },

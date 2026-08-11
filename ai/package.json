@@ -1,0 +1,28 @@
+{
+  "name": "spark-ai",
+  "version": "0.1.0",
+  "description": "SPARK intelligence service (Member C) — adaptive offline spend-cap recommendations, trust-graph traversal, and fraud intelligence.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node --experimental-strip-types src/index.ts",
+    "lint": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "prisma:generate": "prisma generate",
+    "db:up": "tsx scripts/dev-db.ts up",
+    "db:down": "tsx scripts/dev-db.ts down",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "fastify": "^5.11.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "embedded-postgres": "^17.2.0-beta.15",
+    "prisma": "^5.20.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.3"
+  }
+}

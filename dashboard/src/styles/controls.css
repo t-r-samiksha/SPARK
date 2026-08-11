@@ -438,3 +438,23 @@
   color: var(--text-secondary);
   line-height: var(--leading-snug);
 }
+
+/* Per-signal justification under each meter — the model's own words for why it scored that way. */
+.signal-row__detail {
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  line-height: var(--leading-snug);
+  margin-top: 2px;
+}
+
+.cap-model-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border-subtle);
+}

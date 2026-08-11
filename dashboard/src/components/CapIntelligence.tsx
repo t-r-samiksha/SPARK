@@ -57,42 +57,9 @@ export function CapIntelligence() {
               <Tag tone="neutral">HARDCODED STUB</Tag>
             </div>
 
-            {/* Signal Decomposition Matrix */}
-            <div className="signal-decomposition">
-              <span className="overline" style={{ color: 'var(--text-muted)' }}>
-                Offline Risk Signal Decomposition
-              </span>
-
-              <div className="signal-row">
-                <div className="signal-row__head">
-                  <span className="signal-row__label">Hardware Enclave Trust (TEE)</span>
-                  <span className="signal-row__score">0.96 WEIGHT</span>
-                </div>
-                <div className="signal-meter">
-                  <div className="signal-meter__fill" style={{ width: '96%' }} />
-                </div>
-              </div>
-
-              <div className="signal-row">
-                <div className="signal-row__head">
-                  <span className="signal-row__label">Mesh Settlement Velocity Buffer</span>
-                  <span className="signal-row__score">0.82 WEIGHT</span>
-                </div>
-                <div className="signal-meter">
-                  <div className="signal-meter__fill" style={{ width: '82%' }} />
-                </div>
-              </div>
-
-              <div className="signal-row">
-                <div className="signal-row__head">
-                  <span className="signal-row__label">Historical Anomaly Discount</span>
-                  <span className="signal-row__score">0.14 WEIGHT</span>
-                </div>
-                <div className="signal-meter">
-                  <div className="signal-meter__fill" style={{ width: '14%' }} />
-                </div>
-              </div>
-            </div>
+            {/* No fabricated signal decomposition here: with no model deployed there are no
+                signals to show, and inventing plausible-looking bars would be exactly the kind
+                of fabrication this console refuses to do. */}
 
             {/* Honest 501 Blueprint */}
             <div className="cap-unimplemented-blueprint">
@@ -132,11 +99,60 @@ export function CapIntelligence() {
                 <div className="cap-amount-title">Recommended Offline Cap</div>
                 <div className="cap-amount-val mono">{formatPaise(data.recommended_cap)}</div>
               </div>
-              <Tag tone="accent">LIVE ML RECOMMENDATION</Tag>
+              <Tag tone="accent">LIVE RECOMMENDATION</Tag>
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
-              Integer paise <span className="mono">{data.recommended_cap}</span> computed dynamically by the Member C adaptive trust engine.
+
+            {/* Every bar below is a value the model returned. Nothing here is illustrative. */}
+            {data.signals && data.signals.length > 0 && (
+              <div className="signal-decomposition">
+                <span className="overline" style={{ color: 'var(--text-muted)' }}>
+                  Offline Risk Signal Decomposition
+                </span>
+
+                {data.signals.map((signal) => (
+                  <div className="signal-row" key={signal.key} title={signal.detail}>
+                    <div className="signal-row__head">
+                      <span className="signal-row__label">{signal.label}</span>
+                      <span className="signal-row__score">
+                        {signal.score.toFixed(2)} × {signal.weight.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="signal-meter">
+                      <div
+                        className="signal-meter__fill"
+                        style={{ width: `${Math.round(signal.score * 100)}%` }}
+                      />
+                    </div>
+                    <div className="signal-row__detail">{signal.detail}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {data.balance_capped && (
+              <Feedback tone="warn" code="BALANCE_BOUND">
+                The account's real balance, not the risk score, is the binding constraint on this cap.
+              </Feedback>
+            )}
+
+            {data.disaster_override && (
+              <Feedback tone="warn" code="DISASTER_OVERRIDE">
+                Raised to <span className="mono">{formatPaise(data.disaster_override.higher_cap)}</span> by the
+                active disaster event in <span className="mono">{data.disaster_override.region_geo}</span> —
+                an operator-authorised exception, not a model output.
+              </Feedback>
+            )}
+
+            <div className="cap-model-footer">
+              <span>
+                Integer paise <span className="mono">{data.recommended_cap}</span>
+                {typeof data.confidence === 'number' && (
+                  <> · confidence <span className="mono">{data.confidence.toFixed(3)}</span></>
+                )}
+              </span>
+              {data.model_version && <span className="mono">{data.model_version}</span>}
             </div>
+
             <Button variant="quiet" size="sm" onClick={reload}>
               Refresh Model
             </Button>

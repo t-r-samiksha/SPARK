@@ -525,3 +525,20 @@
   .incident-cell--token { grid-area: tokens; }
   .incident-actions-cell { grid-area: actions; align-self: center; }
 }
+
+/* Fraud reasons — why a device was flagged, stated inline so an operator can triage the row
+   without opening anything. */
+.fraud-reason-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.fraud-reason {
+  font-size: var(--text-3xs);
+  padding: 1px var(--sp-1-5);
+  border-radius: var(--radius-xs);
+  background-color: var(--warning-muted);
+  color: oklch(42% 0.12 70);
+  white-space: nowrap;
+}

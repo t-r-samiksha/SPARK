@@ -439,10 +439,12 @@ paths:
                     pattern: "^[0-9]+$"
                     description: >
                       Integer paise, decimal string. Same value/source as
-                      GET /limit/recommendation — still Member C's placeholder model.
+                      GET /limit/recommendation — Member C's model (ai/) when configured,
+                      otherwise the flat ₹2,000 baseline.
                   trust_attestations:
                     type: array
-                    description: "TODO: stubbed as empty — real trust-graph logic belongs to Member C."
+                    description: "Served from stored trust edges (settlement/trustEdges.ts); this
+                      TODO was stale. Graph *traversal* (bounded 3-hop, decaying) lives in ai/."
                     items:
                       $ref: "#/components/schemas/TrustAttestationPem"
 
@@ -531,7 +533,10 @@ paths:
         below, matching the DoubleSpendIncident model (src/settlement/doubleSpendResolver.ts) and
         reusing the same field names POST /sync/transactions already returns incidents with, so
         one incident looks the same everywhere it's surfaced. fraud_flag currently always returns
-        an empty array — no fraud-detection logic exists yet (Member C's fraud intelligence).
+        fraud_flag is served by Member C's intelligence service (ai/) when AI_SERVICE_URL is
+        configured on the backend; with it unset the endpoint returns an empty array as before.
+        If the service is configured but unreachable, type=fraud_flag returns 503 rather than an
+        empty list — "nothing is suspicious" and "we could not look" are different answers.
       parameters:
         - name: type
           in: query
@@ -580,8 +585,9 @@ paths:
                               description: Unix epoch seconds.
                         - type: object
                           description: >
-                            Placeholder — shape TBD once fraud-detection logic exists. No
-                            fraud_flag incidents are produced today.
+                            Produced by Member C's intelligence service (ai/). Fields beyond
+                            `type` are additive: a client reading only `type` is unaffected.
+                            `score` is composite suspicion in [0,1]; `reasons` explains it.
                           required: [type]
                           properties:
                             type:

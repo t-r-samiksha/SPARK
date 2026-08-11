@@ -77,11 +77,12 @@ function RadarScanningEmpty({ filter, searchQuery }: { filter: IncidentType; sea
           <div className="radar-scope__cross" />
           <div className="radar-scope__cross radar-scope__cross--vert" />
         </div>
-        <Tag tone="info" dot>FRAUD INTELLIGENCE · ROADMAP PHASE 3</Tag>
-        <div className="feed-empty-title">Fraud flags not wired yet</div>
+        <Tag tone="accent" dot>NO BEHAVIOURAL FLAGS</Tag>
+        <div className="feed-empty-title">Nothing currently flagged</div>
         <div className="feed-empty-desc">
-          The endpoint <span className="mono">/admin/incidents?type=fraud_flag</span> returns an empty array today.
-          Real-time statistical fraud intelligence and heuristic scoring models are scheduled in the Member C roadmap.
+          The intelligence service scanned the fleet and found no device whose behaviour warrants
+          review. A flag needs corroborating signals, so quiet here means quiet — not that nothing
+          was checked.
         </div>
       </div>
     );
@@ -150,7 +151,12 @@ export function IncidentFeed({ onSelectRevokeDevice, onIncidentsLoaded }: Incide
           inc.tx_id_b.toLowerCase().includes(q)
         );
       }
-      return false;
+      return (
+        inc.device_id?.toLowerCase().includes(q) ||
+        inc.id?.toLowerCase().includes(q) ||
+        inc.reasons?.some((r) => r.label.toLowerCase().includes(q)) ||
+        false
+      );
     });
   }, [data, searchQuery]);
 
@@ -297,18 +303,22 @@ export function IncidentFeed({ onSelectRevokeDevice, onIncidentsLoaded }: Incide
           <div className="incident-list">
             {filteredData.map((incident, idx) => (
               <IncidentRowItem
-                key={'id' in incident ? incident.id : `fraud-${idx}`}
+                key={isDoubleSpend(incident) ? incident.id : (incident.id ?? `fraud-${idx}`)}
                 incident={incident}
                 idx={idx}
-                isExpanded={('id' in incident && expandedId === incident.id) || false}
+                isExpanded={isDoubleSpend(incident) && expandedId === incident.id}
                 onToggle={() => {
-                  if ('id' in incident) {
+                  // Only double-spend incidents have a forensic inspector to open.
+                  if (isDoubleSpend(incident)) {
                     setExpandedId(expandedId === incident.id ? null : incident.id);
                   }
                 }}
                 onSelectRevoke={() => {
-                  if (isDoubleSpend(incident)) {
-                    onSelectRevokeDevice?.(incident.device_id);
+                  // Both incident kinds carry a device the operator may want to act on; the
+                  // revocation terminal still requires its own explicit confirmation.
+                  const deviceId = isDoubleSpend(incident) ? incident.device_id : incident.device_id;
+                  if (deviceId) {
+                    onSelectRevokeDevice?.(deviceId);
                   }
                 }}
               />
@@ -341,29 +351,67 @@ function IncidentRowItem({
   onSelectRevoke: () => void;
 }) {
   if (!isDoubleSpend(incident)) {
+    // Behavioural flag from the intelligence service. Unlike a double-spend it is a suspicion,
+    // not a proof, so the row states the score and the reasons and offers review — never an
+    // automatic action.
+    const score = incident.score ?? 0;
+    const tone = score >= 0.85 ? 'danger' : 'warning';
+
     return (
       <div className="incident-row-wrapper">
         <div className="incident-row" style={{ animationDelay: `${idx * 40}ms` }}>
           <div className="incident-cell incident-cell--type">
-            <Tag tone="warning" dot>FRAUD_FLAG</Tag>
+            <Tag tone={tone} dot>FRAUD_FLAG</Tag>
           </div>
           <div className="incident-cell incident-cell--device">
-            <span className="incident-id-text">Unmapped Sensor</span>
-            <span className="incident-meta-text">HEURISTIC EVALUATION</span>
-          </div>
-          <div className="incident-cell incident-cell--token">
-            <span className="mono text-muted">—</span>
-          </div>
-          <div className="incident-cell">
-            <span className="text-muted" style={{ fontSize: 'var(--text-xs)' }}>
-              Shape TBD · Member C model placeholder
+            <span className="incident-id-text">
+              {incident.device_id ? shortId(incident.device_id) : 'Unattributed'}
+            </span>
+            <span className="incident-meta-text">
+              {incident.model_version ?? 'HEURISTIC EVALUATION'}
             </span>
           </div>
+          <div className="incident-cell incident-cell--token">
+            <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+              {score.toFixed(2)}
+            </span>
+            <span className="incident-meta-text">SUSPICION SCORE</span>
+          </div>
+          <div className="incident-cell">
+            {incident.reasons && incident.reasons.length > 0 ? (
+              <div className="fraud-reason-list">
+                {incident.reasons.map((reason) => (
+                  <span className="fraud-reason" key={reason.key} title={reason.detail}>
+                    {reason.label} <span className="mono">{reason.score.toFixed(2)}</span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted" style={{ fontSize: 'var(--text-xs)' }}>
+                No reasons reported
+              </span>
+            )}
+          </div>
           <div className="incident-cell incident-cell--time">
-            <span className="incident-time">—</span>
+            <span className="incident-time">
+              {incident.detected_at ? formatRelative(incident.detected_at) : '—'}
+            </span>
           </div>
           <div className="incident-actions-cell">
-            <span className="tag tag--neutral tag--xs">N/A</span>
+            {incident.device_id ? (
+              <Button
+                variant="quiet"
+                size="xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectRevoke();
+                }}
+              >
+                Review
+              </Button>
+            ) : (
+              <span className="tag tag--neutral tag--xs">N/A</span>
+            )}
           </div>
         </div>
       </div>
