@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.spark.wallet.protocol.TapTransportTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-11T18:03:53" hostname="AKSHAYAS-BOOK" time="0.568">
+<testsuite name="com.spark.wallet.protocol.TapTransportTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-11T18:20:40" hostname="AKSHAYAS-BOOK" time="0.269">
   <properties/>
-  <testcase name="testFullFourStepApduHandshakeAndPaymentTransfer" classname="com.spark.wallet.protocol.TapTransportTest" time="0.504"/>
-  <testcase name="testQrFallbackInvoiceAndPaymentRoundtrip" classname="com.spark.wallet.protocol.TapTransportTest" time="0.043"/>
-  <testcase name="testX25519EcdhAndAesGcmSessionAgreement" classname="com.spark.wallet.protocol.TapTransportTest" time="0.021"/>
-  <system-out><![CDATA[TAP TEST RESULT: Success(transaction=SparkTransaction(txId=7b80aa18-dccc-4065-8182-0d6d0ce2ecfe, tokenId=056027a5-447c-494e-8bca-f3062bcb16b6, amount=25000, payer=Party(deviceId=4cd74b06-1a9b-4d86-9911-e43d0bd059de, accountId=00000000-0000-4000-8000-000000000001, cert=-----BEGIN SPARK DEVICE CERTIFICATE-----
+  <testcase name="testFullFourStepApduHandshakeAndPaymentTransfer" classname="com.spark.wallet.protocol.TapTransportTest" time="0.203"/>
+  <testcase name="testQrFallbackInvoiceAndPaymentRoundtrip" classname="com.spark.wallet.protocol.TapTransportTest" time="0.047"/>
+  <testcase name="testX25519EcdhAndAesGcmSessionAgreement" classname="com.spark.wallet.protocol.TapTransportTest" time="0.019"/>
+  <system-out><![CDATA[TAP TEST RESULT: Success(transaction=SparkTransaction(txId=950a1dce-f8c2-440b-b2b3-fca27bd682fa, tokenId=5342e31a-8d36-4612-9134-fbfae513b659, amount=25000, payer=Party(deviceId=82bcf7b9-ec4c-4c0e-9323-9750504b5db0, accountId=00000000-0000-4000-8000-000000000001, cert=-----BEGIN SPARK DEVICE CERTIFICATE-----
 eyJhY2NvdW50X2lkIjoiMDAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAw
-MDAxIiwiZGV2aWNlX2lkIjoiNGNkNzRiMDYtMWE5Yi00ZDg2LTk5MTEtZTQzZDBi
-ZDA1OWRlIiwiZGV2aWNlX3B1YmxpY19rZXkiOiJJc0Y1N2RYaW9OeHZFTk9UUFRt
-R3oteko2bFU4WFh3TndURlNCdjBfUklvIiwibm90X2FmdGVyIjoiMjAyNy0wOC0w
+MDAxIiwiZGV2aWNlX2lkIjoiODJiY2Y3YjktZWM0Yy00YzBlLTkzMjMtOTc1MDUw
+NGI1ZGIwIiwiZGV2aWNlX3B1YmxpY19rZXkiOiJ5WkhEUVRvVVJCWXM1U0JRd2ts
+RTNBbDlPcXYzMFh5Y0V3bmxBbkREVzlnIiwibm90X2FmdGVyIjoiMjAyNy0wOC0w
 MVQwMDowMDowMFoiLCJub3RfYmVmb3JlIjoiMjAyNi0wOC0wMVQwMDowMDowMFoi
-LCJzZXJpYWxfbnVtYmVyIjoiU1BBUkstQ0VSVC1mZjM0MmQxZC03ODg5LTQ0NTMt
-OTJkNy05NGVhNWVhMThhNWMiLCJzaWduYXR1cmUiOiJKa21LYkNtVU9XaHB4WXFj
-cXMzYTZtVFJtTXVRUlAzT1A2V3pxazE4TnpWNXBqM2NYSTZtTkEtaVczR3dFdE1U
-d1ZXOVhLeEQzS2NqRS0xOHlTZnREUSJ9
------END SPARK DEVICE CERTIFICATE-----), payee=Party(deviceId=65014c57-8d5b-4f3d-b570-638fae4fe777, accountId=00000000-0000-4000-8000-000000000002, cert=-----BEGIN SPARK DEVICE CERTIFICATE-----
+LCJzZXJpYWxfbnVtYmVyIjoiU1BBUkstQ0VSVC02MGE5M2ExNC00MjBhLTQxMWIt
+ODQwYi0zMGE2MjJjMzA0OGYiLCJzaWduYXR1cmUiOiJWcmV0OENocnBSa1ZZOFZ5
+Q0xJMnpqZTAxMThCQ0h6U0hsNUVOVzBGdXpJU0ZUQ1RNTnJCeVFCbDN4OUF0NWdW
+allzTDBQUUtnY1hOSEFNY2FGX3RBUSJ9
+-----END SPARK DEVICE CERTIFICATE-----), payee=Party(deviceId=f409f459-e6b6-4c47-89bf-6d9e69ecfafb, accountId=00000000-0000-4000-8000-000000000002, cert=-----BEGIN SPARK DEVICE CERTIFICATE-----
 eyJhY2NvdW50X2lkIjoiMDAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAw
-MDAyIiwiZGV2aWNlX2lkIjoiNjUwMTRjNTctOGQ1Yi00ZjNkLWI1NzAtNjM4ZmFl
-NGZlNzc3IiwiZGV2aWNlX3B1YmxpY19rZXkiOiJNZGltVWp5czYxRlNITTExc1Bw
-cFpGZU16MFlNODVfZG54NjQwVDJvckg4Iiwibm90X2FmdGVyIjoiMjAyNy0wOC0w
+MDAyIiwiZGV2aWNlX2lkIjoiZjQwOWY0NTktZTZiNi00YzQ3LTg5YmYtNmQ5ZTY5
+ZWNmYWZiIiwiZGV2aWNlX3B1YmxpY19rZXkiOiJ0bDdTS2ZhTDQzbUlackFhUVpw
+VENPRGY4bm9iZHhsRUE4dks5Vnp5NU5rIiwibm90X2FmdGVyIjoiMjAyNy0wOC0w
 MVQwMDowMDowMFoiLCJub3RfYmVmb3JlIjoiMjAyNi0wOC0wMVQwMDowMDowMFoi
-LCJzZXJpYWxfbnVtYmVyIjoiU1BBUkstQ0VSVC1lYWEyODM5NS0xNTNhLTRmZmEt
-OTZhYS01OTczNjU3NDE1N2MiLCJzaWduYXR1cmUiOiJJR1k5TDVKblY2RFd2WkhD
-dmZUQ2k5S3BMbmhRdU1fcnMxM3lPQkltWjFmNTdrQjNLdVllRnBhRUN2YTdPVEU5
-SVhuTFA5Q1IyNi1Vc3Z5MGJwU0tEQSJ9
------END SPARK DEVICE CERTIFICATE-----), deviceCounter=1, prevTxHash=null, timestamp=1786471434, signature=AZzdI7J4S3cSw6qwDb6phjJEV-FK43vj50iSwMyScRG-1wLGc8ASjTuqrD8ksDox_AoyO8PeJA_GS6bn_obzBA), transactionHash=Y4Eddmt5jQr4rtu8bBc2teqZ9GRSAUAGvhlU1XAnmAc)
+LCJzZXJpYWxfbnVtYmVyIjoiU1BBUkstQ0VSVC02OGZlNjNlYy0wZThjLTQ4NWQt
+YjYxYy1kODBhN2U2N2UyNDIiLCJzaWduYXR1cmUiOiIzYThRLVp2RnRPREVrWkty
+TTZqa2cyRDMtZlNob0RaeHFFZ2hlZll5cEFZSnZnODBTaVllTWFqTXVQUVVSd19F
+N1pVTTVwWGgtYzdpNlJteVZ1WVZDZyJ9
+-----END SPARK DEVICE CERTIFICATE-----), deviceCounter=1, prevTxHash=null, timestamp=1786472440, signature=Iq5xsPLfGCvtpg_TYPlIXjaP09W1_QWvxQIdYKyXX05Z8jJzERUHI-5AznHerwbvK9dBDU7gknaTaTXhWBP0BQ), transactionHash=c7IrbQz7lhYJtcj3YCuk3qPkCjcf2B3CHr9w9paJJ_A)
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

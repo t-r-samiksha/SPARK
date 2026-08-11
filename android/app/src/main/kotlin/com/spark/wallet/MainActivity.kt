@@ -11,12 +11,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spark.wallet.data.AppDatabase
 import com.spark.wallet.data.CertificateStore
 import com.spark.wallet.data.EnrollmentRepository
 import com.spark.wallet.data.KeyAliasStore
 import com.spark.wallet.data.PurseRepositoryImpl
+import com.spark.wallet.data.sync.SyncRepository
 import com.spark.wallet.security.AttestationManager
 import com.spark.wallet.security.KeyStoreManager
 import com.spark.wallet.security.SecurityRepositoryImpl
@@ -24,6 +26,8 @@ import com.spark.wallet.ui.screens.HomeScreen
 import com.spark.wallet.ui.screens.HomeViewModel
 import com.spark.wallet.ui.screens.OnboardingScreen
 import com.spark.wallet.ui.screens.OnboardingViewModel
+import com.spark.wallet.ui.screens.PendingQueueScreen
+import com.spark.wallet.ui.screens.PendingQueueViewModel
 import com.spark.wallet.ui.theme.SparkWalletTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,20 +53,55 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(applicationContext)
         val purseRepository = PurseRepositoryImpl(database.purseDao(), certificateStore = certificateStore)
 
+        val syncRepository = SyncRepository(
+            context = applicationContext,
+            ledgerDao = database.ledgerDao(),
+            pendingRelayDao = database.pendingRelayDao(),
+            cachedCertDao = database.cachedCertDao(),
+            cachedTrustDao = database.cachedTrustDao(),
+            purseDao = database.purseDao(),
+            certificateStore = certificateStore
+        )
+
+        // Start opportunistic background sync whenever any network path becomes available
+        syncRepository.startOpportunisticSync(lifecycleScope)
+
         setContent {
             SparkWalletTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var isEnrolled by remember { mutableStateOf(certificateStore.isEnrolled()) }
+                    var currentScreen by remember { mutableStateOf("home") }
 
                     if (isEnrolled) {
-                        val homeViewModel: HomeViewModel = viewModel(
-                            factory = HomeViewModel.provideFactory(
-                                purseRepository = purseRepository,
-                                ledgerDao = database.ledgerDao(),
-                                certificateStore = certificateStore
-                            )
-                        )
-                        HomeScreen(viewModel = homeViewModel)
+                        when (currentScreen) {
+                            "pending_queue" -> {
+                                val pendingQueueViewModel: PendingQueueViewModel = viewModel(
+                                    factory = PendingQueueViewModel.provideFactory(
+                                        context = applicationContext,
+                                        syncRepository = syncRepository,
+                                        ledgerDao = database.ledgerDao(),
+                                        pendingRelayDao = database.pendingRelayDao()
+                                    )
+                                )
+                                PendingQueueScreen(
+                                    viewModel = pendingQueueViewModel,
+                                    onNavigateBack = { currentScreen = "home" }
+                                )
+                            }
+                            else -> {
+                                val homeViewModel: HomeViewModel = viewModel(
+                                    factory = HomeViewModel.provideFactory(
+                                        purseRepository = purseRepository,
+                                        ledgerDao = database.ledgerDao(),
+                                        certificateStore = certificateStore
+                                    )
+                                )
+                                HomeScreen(
+                                    viewModel = homeViewModel,
+                                    onNavigateToSync = { currentScreen = "pending_queue" }
+                                )
+                            }
+                        }
                     } else {
                         OnboardingScreen(
                             viewModel = onboardingViewModel,

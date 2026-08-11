@@ -1,11 +1,13 @@
 package com.spark.wallet.network
 
+import com.spark.wallet.protocol.SparkTransaction
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 /**
  * Request payload for POST /api/v1/enroll.
@@ -71,6 +73,63 @@ data class PurseTopUpResponse(
 )
 
 /**
+ * Request payload for POST /api/v1/sync/transactions.
+ */
+@Serializable
+data class SyncTransactionsRequest(
+    @SerialName("transactions") val transactions: List<SparkTransaction>
+)
+
+@Serializable
+data class SettleResult(
+    @SerialName("tx_id") val txId: String,
+    @SerialName("status") val status: String, // "SETTLED" or "REJECTED"
+    @SerialName("rejection_reason") val rejectionReason: String? = null
+)
+
+@Serializable
+data class SettleIncident(
+    @SerialName("incident_id") val incidentId: String? = null,
+    @SerialName("type") val type: String,
+    @SerialName("tx_id") val txId: String? = null
+)
+
+/**
+ * Response from POST /api/v1/sync/transactions.
+ */
+@Serializable
+data class SyncTransactionsResponse(
+    @SerialName("results") val results: List<SettleResult> = emptyList(),
+    @SerialName("incidents") val incidents: List<SettleIncident> = emptyList()
+)
+
+@Serializable
+data class DisasterFlag(
+    @SerialName("kind") val kind: String = "disaster",
+    @SerialName("type") val type: String = "EMERGENCY",
+    @SerialName("region_geo") val regionGeo: String? = null,
+    @SerialName("active") val active: Boolean = true,
+    @SerialName("higher_cap") val higherCap: String? = null,
+    @SerialName("essential_only") val essentialOnly: Boolean = false,
+    @SerialName("started_at") val startedAt: Long = 0L,
+    @SerialName("ended_at") val endedAt: Long? = null
+)
+
+/**
+ * Response from GET /api/v1/sync/updates.
+ */
+@Serializable
+data class SyncUpdatesResponse(
+    @SerialName("crl") val crl: List<String> = emptyList(),
+    @SerialName("crl_cursor") val crlCursor: Long = 0L,
+    @SerialName("escrow_settlements") val escrowSettlements: List<SparkTransaction> = emptyList(),
+    @SerialName("escrow_settlements_cursor") val escrowSettlementsCursor: Long = 0L,
+    @SerialName("flags") val flags: List<DisasterFlag> = emptyList(),
+    @SerialName("recommended_cap") val recommendedCap: String? = null,
+    @SerialName("trust_attestations") val trustAttestations: List<String> = emptyList()
+)
+
+/**
  * Standard error response structure from SPARK backend.
  */
 @Serializable
@@ -101,4 +160,14 @@ interface SparkApiService {
     suspend fun topUpPurse(
         @Body request: PurseTopUpRequest
     ): Response<PurseTopUpResponse>
+
+    @POST("sync/transactions")
+    suspend fun syncTransactions(
+        @Body request: SyncTransactionsRequest
+    ): Response<SyncTransactionsResponse>
+
+    @GET("sync/updates")
+    suspend fun getSyncUpdates(
+        @Query("since") sinceEpochSec: String? = null
+    ): Response<SyncUpdatesResponse>
 }

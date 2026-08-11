@@ -105,7 +105,7 @@ class PurseRepositoryTest {
         assertTrue("Top up should succeed", topUpResult.isSuccess)
 
         val updated = topUpResult.getOrThrow()
-        assertEquals(150000L, updated.remaining)
+        assertEquals(100000L, updated.remaining)
     }
 
     @Test
@@ -174,16 +174,19 @@ class PurseRepositoryTest {
         override suspend fun topUpPurse(request: PurseTopUpRequest): Response<PurseTopUpResponse> {
             val token = SparkPurseToken(
                 deviceId = deviceId,
-                value = "150000",
+                value = request.amount,
                 cap = "200000",
-                counterStart = 0L,
+                counterStart = 5L, // Mocking that some transactions happened
                 expiry = (System.currentTimeMillis() + 86400000L * 30) / 1000,
-                tokenId = tokenId,
-                signature = "dummy-sig"
+                tokenId = request.tokenId,
+                signature = "dummy-signature"
             )
             val pem = PurseTokenFormat.wrapPurseToken(token)
-            return Response.success(PurseTopUpResponse(purseToken = pem, status = "refilled"))
+            return Response.success(PurseTopUpResponse(purseToken = pem, status = "SUCCESS"))
         }
+
+        override suspend fun syncTransactions(request: com.spark.wallet.network.SyncTransactionsRequest) = throw UnsupportedOperationException()
+        override suspend fun getSyncUpdates(sinceEpochSec: String?) = throw UnsupportedOperationException()
     }
 
     class InMemoryPurseDao : LocalPurseDao {

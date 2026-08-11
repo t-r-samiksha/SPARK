@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.spark.wallet.protocol.CanonicalSerializerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-11T18:03:54" hostname="AKSHAYAS-BOOK" time="0.038">
+<testsuite name="com.spark.wallet.protocol.CanonicalSerializerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-11T18:20:39" hostname="AKSHAYAS-BOOK" time="0.118">
   <properties/>
   <testcase name="testNestedCanonicalSerializationWithMultiLinePemCert" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.001"/>
-  <testcase name="testTransactionBuilderBuildSigned" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.014"/>
-  <testcase name="testDocVectorKnownAnswerSignatureMatch" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.022"/>
+  <testcase name="testTransactionBuilderBuildSigned" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.048"/>
+  <testcase name="testDocVectorKnownAnswerSignatureMatch" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.067"/>
   <testcase name="testCanonicalSerializationSignatureExclusion" classname="com.spark.wallet.protocol.CanonicalSerializerTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
