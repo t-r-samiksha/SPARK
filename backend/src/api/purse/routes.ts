@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../db/client';
 import { requireSession } from '../auth/requireSession';
-import { getRecommendedCap } from './limitStub';
+import { capIntelligenceConfigured, getCapRecommendation, getRecommendedCap } from './limitStub';
 import { issuePurseToken } from './issuePurseToken';
 import { getActiveDisasterEvent } from '../../settlement/disasterContext';
 
@@ -54,7 +54,7 @@ export default async function purseRoutes(fastify: FastifyInstance): Promise<voi
       // docs/purse-token-format.md#value-vs-cap ("cap is... the maximum the backend is willing to
       // authorize this device to hold offline"), distinct from the open question above about
       // where the value number itself is sourced from.
-      const normalCap = getRecommendedCap();
+      const normalCap = await getRecommendedCap(deviceId);
 
       // Phase 9 (disaster-mode enforcement): if a disaster is active and has a higher_cap set,
       // devices may hold more than the normal recommended cap while it's in effect — the whole
@@ -67,7 +67,6 @@ export default async function purseRoutes(fastify: FastifyInstance): Promise<voi
         activeDisaster?.higherCap && BigInt(activeDisaster.higherCap) > BigInt(normalCap)
           ? activeDisaster.higherCap
           : normalCap;
-
       const requestedValue = BigInt(value);
       if (requestedValue > BigInt(cap)) {
         return reply.code(400).send({ error: `value (${value}) exceeds the recommended cap (${cap})` });
@@ -155,9 +154,43 @@ export default async function purseRoutes(fastify: FastifyInstance): Promise<voi
     reply.code(501).send({ error: 'not implemented' });
   });
 
-  fastify.get('/limit/recommendation', async (_request, reply) => {
-    // TODO: return { recommended_cap } — AI-suggested offline spend cap for the authenticated
-    // device. Response shape beyond this field is unspecified in kickoff.
-    reply.code(501).send({ error: 'not implemented' });
-  });
+  // Served by Member C's intelligence service (ai/). `recommended_cap` is the contract field;
+  // the decomposition alongside it is additive, so a client reading only `recommended_cap`
+  // still sees exactly what docs/api-contract.md promises.
+  //
+  // Unauthenticated, like the original stub route: the operations console calls this without a
+  // device session to show the network-wide default. Pass ?device_id= for a specific device.
+  fastify.get<{ Querystring: { device_id?: string } }>(
+    '/limit/recommendation',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          additionalProperties: false,
+          properties: { device_id: { type: 'string', format: 'uuid' } },
+        },
+      },
+    },
+    async (request, reply) => {
+      // No intelligence service deployed — the endpoint is still unimplemented, exactly as
+      // docs/api-contract.md describes it today.
+      if (!capIntelligenceConfigured()) {
+        return reply.code(501).send({ error: 'not implemented' });
+      }
+
+      const recommendation = await getCapRecommendation(request.query.device_id);
+
+      // The model is unreachable. Say so rather than presenting the flat fallback as a
+      // recommendation — the console must never show a fabricated number as model output.
+      if (recommendation.degraded) {
+        return reply.code(503).send({
+          error: 'cap intelligence service unavailable',
+          recommended_cap: recommendation.recommended_cap,
+          degraded: true,
+        });
+      }
+
+      return reply.code(200).send(recommendation);
+    },
+  );
 }

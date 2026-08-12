@@ -1,0 +1,509 @@
+/* ============================================================
+   SPARK Operations Console — Shell Layout & Global Telemetry
+   Architecture: Tactical Header · Live Security Telemetry ·
+   Dual-Zone Command Canvas (Incident Stream + Operational Controls)
+   ============================================================ */
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-app);
+}
+
+/* ---- Top Tactical Header ---- */
+
+.tactical-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-h);
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.tactical-header__left {
+  display: flex;
+  align-items: center;
+}
+
+.tactical-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-5);
+  border-right: 1px solid var(--border-default);
+  height: 100%;
+  text-decoration: none;
+}
+
+.tactical-brand__logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: linear-gradient(140deg, oklch(52% 0.12 178) 0%, oklch(42% 0.11 196) 100%);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.tactical-brand__icon {
+  color: var(--accent-on);
+  font-weight: 800;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.tactical-brand__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tactical-brand__title {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-md);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+  line-height: var(--leading-none);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.tactical-brand__badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 1px 4px;
+  background-color: var(--accent-muted);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+}
+
+.tactical-brand__desc {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  line-height: var(--leading-none);
+}
+
+/* Header Telemetry Pills */
+.tactical-header__center {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: 0 var(--sp-5);
+  overflow-x: auto;
+}
+
+.telemetry-node {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.telemetry-node .mono {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.telemetry-node__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1-5);
+  padding: 2px var(--sp-2);
+  background-color: var(--bg-surface-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
+
+.tactical-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-5);
+  border-left: 1px solid var(--border-default);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-beacon {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-beacon::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.4;
+  animation: beacon-wave 2s var(--ease-out) infinite;
+}
+
+@keyframes beacon-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.status-beacon--ok {
+  background-color: var(--accent);
+}
+
+.status-beacon--warn {
+  background-color: var(--warning);
+}
+
+.status-beacon--danger {
+  background-color: var(--danger);
+}
+
+.clock-telemetry {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-surface-inset);
+  padding: var(--sp-1) var(--sp-2-5);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  letter-spacing: var(--tracking-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Live Sub-Header Operations Ribbon ---- */
+
+.operations-ribbon {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 40;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  padding: var(--sp-2) var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.operations-ribbon__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.ribbon-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1-5) var(--sp-3);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  transition: color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+  border: 1px solid transparent;
+}
+
+.ribbon-tab:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-surface-raised);
+}
+
+.ribbon-tab.is-active {
+  color: var(--accent);
+  background-color: var(--accent-muted);
+  border-color: var(--accent-border);
+}
+
+.ribbon-tab__key {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0 3px;
+  background-color: oklch(35% 0.03 250 / 0.06);
+  border-radius: 3px;
+  color: var(--text-faint);
+}
+
+.ribbon-tab.is-active .ribbon-tab__key {
+  background-color: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.operations-ribbon__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.stat-metric {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--text-2xs);
+}
+
+.stat-metric__label {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stat-metric__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-metric__value--accent {
+  color: var(--accent);
+}
+
+.stat-metric__value--danger {
+  color: var(--danger);
+}
+
+.stat-metric__value--warning {
+  color: oklch(48% 0.13 70);
+}
+
+/* ---- Main Command Canvas Layout ---- */
+
+.command-canvas {
+  flex: 1 1 auto;
+  max-width: var(--max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--sp-5) var(--sp-5) var(--sp-10);
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sidebar-w);
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.command-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.command-controls {
+  position: sticky;
+  top: calc(var(--header-h) + var(--telemetry-bar-h) + var(--sp-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+/* ---- Tactical Card Panel Containers ----
+   Elevation is declared once: a precise hairline. No competing drop shadow. */
+
+.tactical-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--dur-normal) var(--ease-out);
+}
+
+.tactical-panel--danger {
+  border-color: var(--danger-border);
+}
+
+.tactical-panel--warning {
+  border-color: var(--warning-border);
+}
+
+.tactical-panel--accent {
+  border-color: var(--accent-border);
+}
+
+.tactical-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background-color: var(--bg-surface-raised);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.tactical-panel__title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2-5);
+}
+
+.tactical-panel__icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.tactical-panel--danger .tactical-panel__icon-box {
+  background-color: var(--danger-muted);
+  border-color: var(--danger-border);
+}
+
+.tactical-panel--warning .tactical-panel__icon-box {
+  background-color: var(--warning-muted);
+  border-color: var(--warning-border);
+}
+
+.tactical-panel__title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  line-height: var(--leading-tight);
+}
+
+.tactical-panel__sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  line-height: var(--leading-tight);
+}
+
+.tactical-panel__body {
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* ---- Responsive Breakpoints ---- */
+
+@media (max-width: 1280px) {
+  :root {
+    --sidebar-w: 22rem;
+  }
+
+  .command-canvas {
+    padding: var(--sp-4) var(--sp-4) var(--sp-8);
+  }
+}
+
+@media (max-width: 1080px) {
+  .command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .command-controls {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--sp-4);
+  }
+}
+
+@media (max-width: 900px) {
+  .tactical-header__center {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .tactical-header {
+    height: auto;
+    flex-direction: column;
+    position: static;
+  }
+
+  .tactical-brand {
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: var(--sp-3) var(--sp-4);
+    width: 100%;
+  }
+
+  .tactical-header__right {
+    border-left: none;
+    padding: var(--sp-2) var(--sp-4);
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .operations-ribbon {
+    position: static;
+    padding: var(--sp-2) var(--sp-4);
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .operations-ribbon__nav {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .command-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .command-canvas {
+    padding: var(--sp-3);
+  }
+}

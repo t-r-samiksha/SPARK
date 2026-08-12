@@ -1,0 +1,223 @@
+/* ============================================================
+   SPARK Operations Console — Base Styles & Resets
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light;
+  scroll-behavior: smooth;
+  background-color: var(--bg-app);
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Typography ---- */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+code, kbd, samp, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  letter-spacing: var(--tracking-mono);
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+.overline {
+  font-family: var(--font-ui);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ---- Color Utility ---- */
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* ---- Form Primitives Reset ---- */
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: transparent;
+}
+
+button {
+  cursor: pointer;
+  user-select: none;
+}
+
+button:disabled, input:disabled, select:disabled, textarea:disabled {
+  cursor: not-allowed;
+}
+
+/* ---- Focus States (Strict WCAG 2.1 AA) ---- */
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Selection ---- */
+
+::selection {
+  background-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+/* ---- Tactical Scrollbars ---- */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(76% 0.014 250) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: oklch(82% 0.012 250);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(70% 0.016 250);
+  background-clip: padding-box;
+}
+
+/* ---- Ambient Engineering Grid ----
+   A faint 32px rule grid grounds the canvas as an instrument surface. No
+   chromatic wash: color on this console is strictly semantic. */
+
+.tactical-grid-bg {
+  background-image:
+    linear-gradient(to right, oklch(35% 0.03 250 / 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(35% 0.03 250 / 0.032) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ---- Micro Utility Animations ---- */
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wave-expand {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes live-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--accent-muted);
+  }
+  50% {
+    box-shadow: 0 0 16px var(--accent);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.4s var(--ease-in-out) infinite;
+}
+
+/* ---- Reduced Motion Safety ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

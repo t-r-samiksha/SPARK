@@ -35,12 +35,28 @@ cd android
 
 ### Backend (bank server)
 
-Requires: Node.js 20+.
+Requires: Node.js 20+ **and a PostgreSQL server** (`prisma/schema.prisma` uses the `postgresql`
+provider — the server will not start without one).
+
+If you do not have Postgres installed, `ai/` ships an embedded one that needs no Docker and no
+system-wide install:
+
+```
+cd ai && npm install && npm run db:up     # leave running
+```
+
+Then:
 
 ```
 cd backend
 npm install
+cp .env.example .env                       # fill in the key seeds and ADMIN_API_KEY
+npx prisma migrate deploy
+npm run dev
 ```
+
+Optionally set `AI_SERVICE_URL=http://localhost:3100` in `backend/.env` to enable Member C's
+cap-intelligence and fraud models. Leave it unset and the backend behaves exactly as before.
 
 ### Dashboard (admin web UI)
 
@@ -57,6 +73,7 @@ npm install
 |---|---|---|
 | Wallet (android/) | `./gradlew installDebug` | Deploys to a connected device/emulator |
 | Backend (backend/) | `npm run dev` | Starts the bank server locally |
+| Intelligence (ai/) | `npm run dev` | Starts Member C's cap/fraud models (optional) |
 | Dashboard (dashboard/) | `npm run dev` | Starts the admin UI dev server, expects backend running |
 
 ## Shared contracts

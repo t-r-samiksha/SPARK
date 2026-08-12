@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../../db/client';
 import { requireAdminKey } from './requireAdminKey';
+import { getFraudFlags } from './fraudClient';
 import { revokeCertificate } from '../../settlement/doubleSpendResolver';
 
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -35,11 +36,21 @@ export default async function adminRoutes(fastify: FastifyInstance): Promise<voi
 
       const type = request.query.type ?? 'all';
 
-      // TODO: no fraud-detection logic exists yet (Member C's fraud intelligence) — this is a
-      // placeholder empty result until that exists, not a real "no fraud found" answer.
-      const fraudFlagIncidents: unknown[] = [];
+      // Fraud flags come from Member C's intelligence service (ai/), which scores behaviour and
+      // returns incidents. It is a reader with no authority to act — a flag is a prompt for an
+      // operator to review, never an automatic revocation.
+      //
+      // If the service is unreachable we return 503 rather than an empty list: "no fraud found"
+      // and "we could not look" are different answers, and the console must not present the
+      // second as the first.
+      const fraudFlagIncidents = await getFraudFlags();
 
       if (type === 'fraud_flag') {
+        if (fraudFlagIncidents === null) {
+          return reply
+            .code(503)
+            .send({ error: 'fraud intelligence service unavailable' });
+        }
         return reply.code(200).send({ incidents: fraudFlagIncidents });
       }
 
@@ -54,7 +65,13 @@ export default async function adminRoutes(fastify: FastifyInstance): Promise<voi
         detected_at: Math.floor(row.detectedAt.getTime() / 1000),
       }));
 
-      const incidents = type === 'double_spend' ? doubleSpendIncidents : [...doubleSpendIncidents, ...fraudFlagIncidents];
+      // For type=all a fraud outage degrades rather than fails: double-spend incidents are real and
+      // must still reach the operator. The console's dedicated fraud tab is where the outage is
+      // reported honestly, via the 503 above.
+      const incidents =
+        type === 'double_spend'
+          ? doubleSpendIncidents
+          : [...doubleSpendIncidents, ...(fraudFlagIncidents ?? [])];
       return reply.code(200).send({ incidents });
     },
   );

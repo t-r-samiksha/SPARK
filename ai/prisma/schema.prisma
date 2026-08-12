@@ -1,0 +1,205 @@
+// SPARK backend database schema.
+//
+// This is a first-pass scaffold matching the entities implied by docs/*-format.md — it will grow
+// as endpoint logic is implemented. Field types intentionally mirror the wire format docs:
+// amounts as strings (decimal paise, never float), UUIDs as String (Postgres `uuid` type via
+// @db.Uuid), signatures/keys as base64url text since that's how they're stored/compared on the
+// wire (raw bytes would need encoding back and forth for no benefit at hackathon scale).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Bank account holding one or more enrolled devices.
+model Account {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  // Simulates the bank's real, live account balance backing this SPARK account, in integer
+  // paise. POST /purse/load debits this to fund an offline purse — see the comment at that route
+  // for why this is a native BigInt (not the decimal-string convention used for signed wire
+  // fields): this value is never signed or canonically serialized, only compared/decremented
+  // server-side, so the cross-language JSON round-trip concern that motivates decimal strings
+  // elsewhere doesn't apply here. Nothing currently credits this field except src/db/seed.ts's
+  // demo data — real bank-account integration (deposits, external balance checks) is out of
+  // scope per the project spec.
+  realBalance BigInt   @default(0) @map("real_balance")
+  devices     Device[]
+
+  @@map("accounts")
+}
+
+// A device certificate issued at /enroll. Mirrors docs/certificate-format.md.
+model Device {
+  deviceId        String    @id @default(uuid()) @map("device_id") @db.Uuid
+  accountId       String    @map("account_id") @db.Uuid
+  account         Account   @relation(fields: [accountId], references: [id])
+  // Dedup key for enrollment: the request to POST /enroll carries no device_id (the backend
+  // mints one — see docs/api-contract.md's /enroll schema), so "device already enrolled"
+  // (the 409 case in the doc) is detected by public key, not by an ID the caller doesn't have yet.
+  devicePublicKey String    @unique @map("device_public_key")
+  serialNumber    String    @unique @map("serial_number")
+  notBefore       DateTime  @map("not_before")
+  notAfter        DateTime  @map("not_after")
+  signature       String
+  revokedAt       DateTime? @map("revoked_at")
+  revokedReason   String?   @map("revoked_reason")
+  // Last time this device successfully called GET /sync/updates. Informational/observability
+  // only (e.g. "which devices haven't synced in a while") — NOT consulted to compute the CRL
+  // delta, which is driven entirely by the client-supplied `since` query param instead. See the
+  // comment on that route for why: trusting server-side memory of "what we last sent" over what
+  // the client explicitly asks for would risk silently under-delivering revocations to a device
+  // that lost its local cursor (e.g. reinstalled), which is the wrong failure mode for a CRL.
+  lastSyncUpdatesAt DateTime? @map("last_sync_updates_at")
+
+  @@map("devices")
+}
+
+// A purse token issued at /purse/load or /purse/topup. Mirrors docs/purse-token-format.md.
+model PurseToken {
+  tokenId      String   @id @default(uuid()) @map("token_id") @db.Uuid
+  deviceId     String   @map("device_id") @db.Uuid
+  value        String
+  cap          String
+  counterStart Int      @map("counter_start")
+  expiry       Int
+  signature    String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("purse_tokens")
+}
+
+// A synced transaction. Mirrors docs/transaction-format.md. Payer/payee cert PEMs are stored
+// verbatim (not normalized to device rows) since a transaction must remain independently
+// verifiable from its own embedded certs, per the offline-verification design.
+model Transaction {
+  txId          String   @id @map("tx_id") @db.Uuid
+  tokenId       String   @map("token_id") @db.Uuid
+  amount        String
+  payerDeviceId String   @map("payer_device_id") @db.Uuid
+  payerAccountId String  @map("payer_account_id") @db.Uuid
+  payerCert     String   @map("payer_cert")
+  payeeDeviceId String   @map("payee_device_id") @db.Uuid
+  payeeAccountId String  @map("payee_account_id") @db.Uuid
+  payeeCert     String   @map("payee_cert")
+  deviceCounter Int      @map("device_counter")
+  prevTxHash    String?  @map("prev_tx_hash")
+  timestamp     Int
+  signature     String
+  syncedAt      DateTime @default(now()) @map("synced_at")
+
+  // A genuine double-spend is exactly two DIFFERENT tx_ids claiming the same (token_id,
+  // device_counter) slot — the settlement engine detects and rejects the second one before it
+  // ever reaches persistence, so this is a defensive DB-level backstop (bug/race protection), not
+  // the primary detection mechanism. Also gives O(1) lookup of "is this slot already settled" and
+  // "what's the last settled transaction for this token" (for prev_tx_hash chain continuation).
+  @@unique([tokenId, deviceCounter])
+  @@map("transactions")
+}
+
+// Revoked device certificates, keyed by the cert's own serial_number — the same key
+// GET /api/v1/sync/updates distributes as a CRL (see docs/certificate-format.md#revocation).
+// Separate from Device.revokedAt/revokedReason (used by /auth/verify's session check) rather than
+// replacing it: a serial-keyed table is what the CRL concept and POST /api/v1/admin/revoke's
+// {serial_number, reason} shape are built around, and it's the table
+// src/settlement/verifyCertificate.ts checks per-transaction. Revocation (here or via
+// /admin/revoke) should write both — see src/settlement/doubleSpendResolver.ts's
+// revokeCertificate() helper — so the two stay consistent.
+model RevokedCertificate {
+  certSerial String   @id @map("cert_serial")
+  revokedAt  DateTime @default(now()) @map("revoked_at")
+  reason     String
+
+  @@map("revoked_certificates")
+}
+
+// A detected double-spend: two validly-signed transactions from the same device claiming the same
+// (token_id, device_counter) slot. Self-incriminating by construction (both are validly signed by
+// the same device_id), so no additional proof is needed beyond recording it. Not part of any
+// docs/*.md wire format — this is purely an internal admin/audit record, surfaced later via
+// GET /api/v1/admin/incidents (type=double_spend) once that endpoint is implemented.
+model DoubleSpendIncident {
+  id          String   @id @default(uuid()) @db.Uuid
+  tokenId     String   @map("token_id") @db.Uuid
+  deviceId    String   @map("device_id") @db.Uuid
+  txIdA       String   @map("tx_id_a") @db.Uuid
+  txIdB       String   @map("tx_id_b") @db.Uuid
+  detectedAt  DateTime @default(now()) @map("detected_at")
+
+  @@map("double_spend_incidents")
+}
+
+// A disaster-mode event, toggled via POST /api/v1/admin/disaster/toggle and surfaced to devices
+// as a "flag" in GET /api/v1/sync/updates. Fields per the task spec (region_geo, type, active,
+// higher_cap, essential_only, started_at, ended_at) — none of this is in docs/*.md yet;
+// api-contract.md's current /admin/disaster/toggle schema only has {region, enabled}, notably
+// missing type/higher_cap/essential_only and using `region` not `region_geo` — flagging for
+// whoever implements that endpoint next to reconcile.
+model DisasterEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  // Freeform for now (region name/code) — real geographic boundary representation (polygon,
+  // geohash, etc.) is undecided; "_geo" in the field name is aspirational, not yet backed by an
+  // actual geo type. GET /sync/updates ignores this entirely today (see that route's comment):
+  // no device-location matching yet, every active event goes to every device.
+  regionGeo     String    @map("region_geo")
+  // Disaster category, e.g. "flood", "earthquake", "network_outage" — freeform, no enum decided.
+  type          String
+  active        Boolean   @default(true)
+  // Elevated offline spend cap during the disaster, decimal-paise string matching every other
+  // amount field's convention (see PurseToken.cap) — nullable since not every disaster
+  // necessarily overrides the cap.
+  higherCap     String?   @map("higher_cap")
+  // Restrict offline spend to "essential" purchases only while active. Surfaced as a flag only —
+  // no transaction-classification logic exists to actually enforce this yet.
+  essentialOnly Boolean   @default(false) @map("essential_only")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  endedAt       DateTime? @map("ended_at")
+
+  @@map("disaster_events")
+}
+
+// A trust edge between two devices, summarizing SETTLED transaction history between them. Phase
+// 8: this table does double duty rather than splitting into a separate "raw state" table — see
+// src/settlement/trustEdges.ts for the full reasoning. Short version: subjectA/subjectB/
+// settledAmount/settlementCount/lastSettledAt are the MUTABLE accumulator (updated by the
+// settlement engine on every settle), and timestamp/signature are a Bank-signed snapshot of the
+// row's current field values, kept valid by re-signing on every update (write-time signing) —
+// GET /trust/attestations and GET /sync/updates serve straight from the stored signature, no
+// signing at read time. Existing columns (id, subjectA, subjectB, settledAmount, settlementCount,
+// timestamp, signature) are unchanged from the initial migration; only lastSettledAt and the
+// uniqueness constraint are new — see prisma/migrations for how this was added without touching
+// the already-applied initial migration.
+model TrustAttestation {
+  id              String   @id @default(uuid()) @db.Uuid
+  // JUDGMENT CALL (trust-attestation-format.md flags this as an open, unresolved question):
+  // symmetric, not directional. One edge per unordered {subject_a, subject_b} device pair,
+  // canonically stored in lexicographic order (subjectA < subjectB) so a settlement in either
+  // direction (A pays B, or B pays A) updates the SAME edge — see canonicalPair() in
+  // trustEdges.ts. The doc's kickoff sentence ("device_a settled X paise with device_b") reads
+  // symmetric; a directional design (separate "A→B" and "B→A" edges) was the documented
+  // alternative, not chosen here.
+  subjectA        String   @map("subject_a") @db.Uuid
+  subjectB        String   @map("subject_b") @db.Uuid
+  // JUDGMENT CALL (also flagged open in trust-attestation-format.md): cumulative all-time total,
+  // not a rolling window. Simpler, matches the "accumulating state" framing of this table.
+  // Phase 8's decaying-weight trust-CHAIN traversal is applied at query/scoring time on top of
+  // this cumulative total, not by windowing storage — revisit if that assumption turns out wrong.
+  settledAmount   String   @map("settled_amount")
+  settlementCount Int      @map("settlement_count")
+  // When this attestation's signature/timestamp were last (re)generated. Always equal to
+  // lastSettledAt today (write-time signing means every settlement re-signs immediately), kept as
+  // a separate field/column from lastSettledAt for forward-compatibility if signing ever moves
+  // off the hot settlement path (e.g. periodic re-signing) — at that point the two could diverge.
+  timestamp       DateTime
+  // New in Phase 8. When this edge was last actually updated by a settled transaction — see the
+  // comment on `timestamp` above for why this is a separate column rather than reusing it.
+  lastSettledAt   DateTime @map("last_settled_at")
+  signature       String
+
+  @@unique([subjectA, subjectB])
+  @@map("trust_attestations")
+}
