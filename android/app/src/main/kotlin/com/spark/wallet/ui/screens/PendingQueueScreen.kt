@@ -147,6 +147,7 @@ fun PendingQueueScreen(
                 // Sync Summary & Action Card
                 SyncActionCard(
                     totalPending = uiState.totalPendingCount,
+                    relayedCount = uiState.pendingRelays.size,
                     isSyncing = uiState.isSyncing,
                     isOnline = uiState.isOnline,
                     lastSyncTimestamp = uiState.lastSyncTimestamp,
@@ -203,6 +204,7 @@ fun PendingQueueScreen(
 @Composable
 fun SyncActionCard(
     totalPending: Int,
+    relayedCount: Int,
     isSyncing: Boolean,
     isOnline: Boolean,
     lastSyncTimestamp: Long,
@@ -234,6 +236,14 @@ fun SyncActionCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    if (relayedCount > 0) {
+                        Text(
+                            text = "($relayedCount carried for others)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SparkGold,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 Surface(

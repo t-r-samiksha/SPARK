@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.spark.wallet.engine.TrustManagerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-12T00:12:25" hostname="AKSHAYAS-BOOK" time="0.017">
+  <properties/>
+  <testcase name="findTrustPath returns 1_0 when payer equals payee" classname="com.spark.wallet.engine.TrustManagerTest" time="0.006"/>
+  <testcase name="findTrustPath limits to 3 hops and fails if further" classname="com.spark.wallet.engine.TrustManagerTest" time="0.009"/>
+  <testcase name="findTrustPath returns valid path when 1 hop away" classname="com.spark.wallet.engine.TrustManagerTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

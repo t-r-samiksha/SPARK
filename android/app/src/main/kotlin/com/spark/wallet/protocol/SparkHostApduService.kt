@@ -81,6 +81,7 @@ class SparkHostApduService : HostApduService() {
                 when (commandApdu[1]) {
                     SparkApduProtocol.INS_EXCHANGE_AUTH -> handleExchangeAuth(commandApdu)
                     SparkApduProtocol.INS_TRANSFER_TX -> handleTransferTx(commandApdu)
+                    SparkApduProtocol.INS_RELAY_TX -> handleRelayTx(commandApdu)
                     else -> SparkApduProtocol.SW_INVALID_INS
                 }
             }
@@ -227,6 +228,60 @@ class SparkHostApduService : HostApduService() {
             )
             SparkApduProtocol.wrapResponse(respJson.toByteArray(Charsets.UTF_8), SparkApduProtocol.SW_AUTH_FAILED)
         }
+    }
+
+    private fun handleRelayTx(apdu: ByteArray): ByteArray {
+        val aesKey = sessionDerivedAesKey ?: return SparkApduProtocol.SW_AUTH_FAILED
+
+        val payloadBytes = SparkApduProtocol.extractPayload(apdu)
+        val jsonString = String(payloadBytes, Charsets.UTF_8)
+        val request = try {
+            SparkApduProtocol.json.decodeFromString(
+                SparkApduProtocol.EncryptedRelayPayload.serializer(),
+                jsonString
+            )
+        } catch (e: Exception) {
+            return SparkApduProtocol.SW_INVALID_INS
+        }
+
+        val encryptedBytes = Base64.getUrlDecoder().decode(request.encryptedBlobBase64Url)
+        val decryptedBytes = try {
+            SessionCrypto.decryptAesGcm(aesKey, encryptedBytes)
+        } catch (e: Exception) {
+            return SparkApduProtocol.SW_AUTH_FAILED
+        }
+        
+        val txJsonString = String(decryptedBytes, Charsets.UTF_8)
+
+        // Try to parse the tx to get its ID, but we don't fully validate it yet
+        // since we're just forwarding it.
+        val transaction = try {
+            TransactionBuilder.deserialize(txJsonString)
+        } catch (e: Exception) {
+            return SparkApduProtocol.SW_INVALID_INS
+        }
+
+        runBlocking {
+            val db = AppDatabase.getDatabase(applicationContext)
+            val relay = com.spark.wallet.data.entity.PendingRelay(
+                txId = transaction.txId,
+                blob = txJsonString,
+                destinationHint = transaction.payee.deviceId,
+                ttl = request.ttl.toLong(),
+                receivedAt = System.currentTimeMillis()
+            )
+            db.pendingRelayDao().insertPendingRelay(relay)
+        }
+
+        val responseDto = SparkApduProtocol.TransferResponse(
+            status = "ACCEPTED",
+            txHash = transaction.txId
+        )
+        val respJson = SparkApduProtocol.json.encodeToString(
+            SparkApduProtocol.TransferResponse.serializer(),
+            responseDto
+        )
+        return SparkApduProtocol.wrapResponse(respJson.toByteArray(Charsets.UTF_8))
     }
 
     private fun resetSession() {

@@ -26,12 +26,23 @@ object SparkApduProtocol {
     const val INS_SELECT: Byte = 0xA4.toByte()
     const val INS_EXCHANGE_AUTH: Byte = 0x10.toByte()
     const val INS_TRANSFER_TX: Byte = 0x20.toByte()
+    const val INS_RELAY_TX: Byte = 0x30.toByte()
 
     val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true
     }
+
+    /**
+     * Payload for Mesh Relay (INS 0x30):
+     * Contains AES-256-GCM encrypted transaction blob of a relayed transaction.
+     */
+    @Serializable
+    data class EncryptedRelayPayload(
+        @SerialName("encrypted_blob") val encryptedBlobBase64Url: String,
+        @SerialName("ttl") val ttl: Int
+    )
 
     /**
      * Payee Initial Response on SELECT AID:

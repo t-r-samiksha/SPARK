@@ -232,9 +232,81 @@ class NfcReaderModeManager(
         )
 
         return if (transferResp.status == "ACCEPTED") {
+            // STEP 4: Mesh Relay - Forward our unsynced transactions and pending relays
+            try {
+                sendRelayTransactions(transceiver, derivedAesKey)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to send relay transactions, but main payment succeeded: ${e.message}")
+            }
             TapPaymentResult.Success(signedTx, transferResp.txHash ?: CanonicalSerializer.computeTransactionHash(signedTx))
         } else {
             TapPaymentResult.Failure("Transaction rejected by payee: ${transferResp.error}")
+        }
+    }
+
+    private suspend fun sendRelayTransactions(transceiver: suspend (ByteArray) -> ByteArray, derivedAesKey: javax.crypto.spec.SecretKeySpec) {
+        val db = com.spark.wallet.data.AppDatabase.getDatabase(activity.applicationContext)
+        val unsyncedLedger = db.ledgerDao().getUnsyncedEntries()
+        
+        val myDeviceId = certificateStore.getDeviceId() ?: "UNKNOWN_DEV"
+        val myAccountId = certificateStore.getAccountId() ?: "UNKNOWN_ACC"
+        val myCertPem = certificateStore.getDeviceCertificatePem() ?: ""
+        
+        val currentTokenId = "00000000-0000-4000-8000-000000000000" // We'd get this from ActivePurse but it doesn't matter for the relayer who just needs a string
+
+        val transactionsToRelay = mutableListOf<String>()
+
+        for (entry in unsyncedLedger) {
+            val tx = SparkTransaction(
+                txId = entry.txId,
+                tokenId = currentTokenId,
+                amount = entry.amount.toString(),
+                payer = Party(
+                    deviceId = if (entry.direction == "out") myDeviceId else entry.counterpartyId,
+                    accountId = myAccountId,
+                    cert = myCertPem
+                ),
+                payee = Party(
+                    deviceId = if (entry.direction == "out") entry.counterpartyId else myDeviceId,
+                    accountId = myAccountId,
+                    cert = myCertPem
+                ),
+                deviceCounter = entry.counter,
+                prevTxHash = entry.prevHash,
+                timestamp = entry.timestamp,
+                signature = entry.signature
+            )
+            transactionsToRelay.add(TransactionBuilder.serialize(tx))
+        }
+
+        // Also relay existing relays if their TTL > 0
+        val pendingRelays = db.pendingRelayDao().getAllPendingRelays()
+        for (relay in pendingRelays) {
+            if (relay.ttl > 0) {
+                transactionsToRelay.add(relay.blob)
+            }
+        }
+
+        // Send each relay
+        for (txJson in transactionsToRelay.take(5)) { // Limit to 5 per tap to avoid blocking NFC
+            val encryptedPayload = SessionCrypto.encryptAesGcm(derivedAesKey, txJson.toByteArray(Charsets.UTF_8))
+            val encryptedBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(encryptedPayload)
+
+            val relayReq = SparkApduProtocol.EncryptedRelayPayload(
+                encryptedBlobBase64Url = encryptedBase64Url,
+                ttl = 3 // Decrement TTL logic can go here, but for now fixed
+            )
+            val relayReqJson = SparkApduProtocol.json.encodeToString(
+                SparkApduProtocol.EncryptedRelayPayload.serializer(),
+                relayReq
+            ).toByteArray(Charsets.UTF_8)
+
+            val relayApdu = SparkApduProtocol.buildApdu(SparkApduProtocol.INS_RELAY_TX, relayReqJson)
+            try {
+                transceiver(relayApdu) // Fire and forget
+            } catch (e: Exception) {
+                Log.w(TAG, "Relay APDU failed", e)
+            }
         }
     }
 

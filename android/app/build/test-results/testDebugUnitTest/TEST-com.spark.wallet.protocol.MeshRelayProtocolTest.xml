@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.spark.wallet.protocol.MeshRelayProtocolTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-12T00:12:25" hostname="AKSHAYAS-BOOK" time="0.006">
+  <properties/>
+  <testcase name="EncryptedRelayPayload serializes correctly" classname="com.spark.wallet.protocol.MeshRelayProtocolTest" time="0.004"/>
+  <testcase name="buildApdu correctly formats INS_RELAY_TX" classname="com.spark.wallet.protocol.MeshRelayProtocolTest" time="0.001"/>
+  <testcase name="isSelectSparkAid identifies correct APDU" classname="com.spark.wallet.protocol.MeshRelayProtocolTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

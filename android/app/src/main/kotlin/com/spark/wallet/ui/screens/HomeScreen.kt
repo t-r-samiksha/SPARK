@@ -30,6 +30,11 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.FamilyRestroom
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.Handshake
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -80,9 +85,14 @@ import java.util.Locale
 fun HomeScreen(
     viewModel: HomeViewModel,
     modifier: Modifier = Modifier,
-    onNavigateToSend: () -> Unit = {},
+    onNavigateToSync: () -> Unit = {},
+    onNavigateToPay: () -> Unit = {},
     onNavigateToReceive: () -> Unit = {},
-    onNavigateToSync: () -> Unit = {}
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToFamily: () -> Unit = {},
+    onNavigateToMerchant: () -> Unit = {},
+    onNavigateToEscrow: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -189,6 +199,14 @@ fun HomeScreen(
                 )
             }
 
+            // Disaster Mode Banner
+            WarningBanner(
+                title = "Disaster Mode Active",
+                message = "Network connectivity is degraded. Limits are relaxed.",
+                actionLabel = "Details",
+                onActionClick = { /* Show details */ }
+            )
+
             // Main Balance Card
             BalanceCard(
                 offlinePaise = uiState.offlineAvailablePaise,
@@ -221,7 +239,7 @@ fun HomeScreen(
                     label = "Pay Peer",
                     modifier = Modifier.weight(1f),
                     accentColor = SparkTeal,
-                    onClick = onNavigateToSend
+                    onClick = onNavigateToPay
                 )
                 QuickActionButton(
                     icon = Icons.Default.QrCodeScanner,
@@ -249,6 +267,59 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f),
                     accentColor = MaterialTheme.colorScheme.primary,
                     onClick = onNavigateToSync
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.History,
+                    label = "History",
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFFE91E63),
+                    onClick = onNavigateToHistory
+                )
+                QuickActionButton(
+                    icon = Icons.Default.FamilyRestroom,
+                    label = "Family",
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFF4CAF50),
+                    onClick = onNavigateToFamily
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.Store,
+                    label = "Merchant",
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFFFF9800),
+                    onClick = onNavigateToMerchant
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Handshake,
+                    label = "Escrow",
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFF2196F3),
+                    onClick = onNavigateToEscrow
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.Settings,
+                    label = "Settings",
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color.Gray,
+                    onClick = onNavigateToSettings
                 )
             }
 

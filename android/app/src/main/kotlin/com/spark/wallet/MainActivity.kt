@@ -28,6 +28,14 @@ import com.spark.wallet.ui.screens.OnboardingScreen
 import com.spark.wallet.ui.screens.OnboardingViewModel
 import com.spark.wallet.ui.screens.PendingQueueScreen
 import com.spark.wallet.ui.screens.PendingQueueViewModel
+import com.spark.wallet.ui.screens.PayScreen
+import com.spark.wallet.ui.screens.ReceiveScreen
+import com.spark.wallet.ui.screens.ReceiptScreen
+import com.spark.wallet.ui.screens.TransactionHistoryScreen
+import com.spark.wallet.ui.screens.FamilyWalletScreen
+import com.spark.wallet.ui.screens.MerchantModeScreen
+import com.spark.wallet.ui.screens.EscrowScreen
+import com.spark.wallet.ui.screens.SettingsScreen
 import com.spark.wallet.ui.theme.SparkWalletTheme
 
 class MainActivity : ComponentActivity() {
@@ -88,6 +96,14 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = { currentScreen = "home" }
                                 )
                             }
+                            "pay" -> PayScreen(onNavigateBack = { currentScreen = "home" })
+                            "receive" -> ReceiveScreen(onNavigateBack = { currentScreen = "home" })
+                            "receipt" -> ReceiptScreen(onNavigateBack = { currentScreen = "home" })
+                            "history" -> TransactionHistoryScreen(onNavigateBack = { currentScreen = "home" })
+                            "family" -> FamilyWalletScreen(onNavigateBack = { currentScreen = "home" })
+                            "merchant" -> MerchantModeScreen(onNavigateBack = { currentScreen = "home" })
+                            "escrow" -> EscrowScreen(onNavigateBack = { currentScreen = "home" })
+                            "settings" -> SettingsScreen(onNavigateBack = { currentScreen = "home" })
                             else -> {
                                 val homeViewModel: HomeViewModel = viewModel(
                                     factory = HomeViewModel.provideFactory(
@@ -98,7 +114,14 @@ class MainActivity : ComponentActivity() {
                                 )
                                 HomeScreen(
                                     viewModel = homeViewModel,
-                                    onNavigateToSync = { currentScreen = "pending_queue" }
+                                    onNavigateToSync = { currentScreen = "pending_queue" },
+                                    onNavigateToPay = { currentScreen = "pay" },
+                                    onNavigateToReceive = { currentScreen = "receive" },
+                                    onNavigateToHistory = { currentScreen = "history" },
+                                    onNavigateToFamily = { currentScreen = "family" },
+                                    onNavigateToMerchant = { currentScreen = "merchant" },
+                                    onNavigateToEscrow = { currentScreen = "escrow" },
+                                    onNavigateToSettings = { currentScreen = "settings" }
                                 )
                             }
                         }
